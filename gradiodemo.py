@@ -28,38 +28,51 @@ def process_image(
     mode: str,
     use_clahe: bool,
     clahe_clip: float,
+    enable_resize: bool,
+    output_width: int,
+    output_height: int,
 ) -> Optional[Image.Image]:
     """
     Gradio 回调函数：将前端传入的图像与参数路由至 sketch2anime 推理流水线。
 
     Args:
-        input_image: 用户上传的 PIL Image（由 gr.Image(type="pil") 解析）
-        mode:        线稿提取模式 ("default" / "improved")
-        use_clahe:   是否启用 CLAHE 局部对比度增强
-        clahe_clip:  CLAHE 对比度限制系数
+        input_image:  用户上传的 PIL Image（由 gr.Image(type="pil") 解析）
+        mode:         线稿提取模式 ("default" / "improved")
+        use_clahe:    是否启用 CLAHE 局部对比度增强
+        clahe_clip:   CLAHE 对比度限制系数
+        enable_resize: 是否启用压缩
+        output_width:  输出线稿宽度
+        output_height: 输出线稿高度
 
     Returns:
-        黑白线稿 PIL Image（恢复至上传图像的原始分辨率）
+        黑白线稿 PIL Image。
+        若 enable_resize=True，则尺寸为 (output_width, output_height)；
+        否则恢复原始分辨率。
     """
     # ---- 空值保护：未上传图片时返回 None ----
     if input_image is None:
         return None
 
+    # ---- 构造 output_size ----
+    output_size = None
+    if enable_resize and output_width > 0 and output_height > 0:
+        output_size = (output_width, output_height)
+
     # ---- 调用推理流水线 ----
-    # sketch2anime 内部处理：
-    #   read_img_path → (可选 CLAHE) → Transform → unsqueeze → 网络前向 → tensor_to_img → save_image
     try:
         result_pil = test.sketch2anime(
             img_obj=input_image,
             mode=mode,
             use_clahe=use_clahe,
             clahe_clip=clahe_clip,
+            output_size=output_size,
         )
         return result_pil
     except Exception as e:
-        # 若推理过程出现异常，将错误信息通过 print 暴露给 Gradio 控制台
         print(f"[gradiodemo] 推理过程出现异常: {e}")
         raise gr.Error(f"线稿生成失败: {e}")
+
+
 
 
 # =============================================================================
@@ -158,7 +171,46 @@ def build_demo() -> gr.Blocks:
                 outputs=clahe_slider,
             )
 
+            # ===================== 输出尺寸控制 =====================
+            gr.Markdown("### 📐 输出尺寸控制")
+            with gr.Row():
+                enable_resize = gr.Checkbox(
+                    label="压缩线稿到指定尺寸",
+                    value=False,
+                    info="勾选后将线稿压缩到指定像素尺寸（如 32×32）",
+                )
+            with gr.Row():
+                output_width = gr.Number(
+                    value=32,
+                    minimum=1,
+                    maximum=4096,
+                    step=1,
+                    label="宽度 (px)",
+                    precision=0,
+                    interactive=True,
+                )
+                output_height = gr.Number(
+                    value=32,
+                    minimum=1,
+                    maximum=4096,
+                    step=1,
+                    label="高度 (px)",
+                    precision=0,
+                    interactive=True,
+                )
+
+            # ---- 尺寸控制开关联动 ----
+            def toggle_size_inputs(enabled: bool):
+                return gr.Number(interactive=enabled), gr.Number(interactive=enabled)
+
+            enable_resize.change(
+                fn=toggle_size_inputs,
+                inputs=enable_resize,
+                outputs=[output_width, output_height],
+            )
+
         # ===================== 提交按钮 =====================
+
         with gr.Row():
             submit_btn = gr.Button(
                 value="🔄 生成线稿",
@@ -173,9 +225,10 @@ def build_demo() -> gr.Blocks:
 
         # ===================== 事件绑定 =====================
         # ---- 点击"生成线稿"按钮 → 执行推理 ----
+
         submit_btn.click(
             fn=process_image,
-            inputs=[input_image, mode_radio, clahe_checkbox, clahe_slider],
+            inputs=[input_image, mode_radio, clahe_checkbox, clahe_slider, enable_resize, output_width, output_height],
             outputs=output_image,
             api_name="sketch2anime",
         )
@@ -183,9 +236,10 @@ def build_demo() -> gr.Blocks:
         # ---- 上传图像时自动触发推理 ----
         input_image.upload(
             fn=process_image,
-            inputs=[input_image, mode_radio, clahe_checkbox, clahe_slider],
+            inputs=[input_image, mode_radio, clahe_checkbox, clahe_slider, enable_resize, output_width, output_height],
             outputs=output_image,
         )
+
 
         # ---- 清空按钮：重置所有组件 ----
         clear_btn.click(
@@ -193,6 +247,7 @@ def build_demo() -> gr.Blocks:
             inputs=None,
             outputs=[input_image, output_image],
         )
+
 
         # ===================== 使用示例 =====================
         gr.Markdown(

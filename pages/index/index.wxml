@@ -68,7 +68,49 @@
         />
         <text class="param-desc">值越大对比度增强越强（1.0~5.0）</text>
       </view>
+
+      <!-- ===== 输出尺寸控制 ===== -->
+      <view class="param-item">
+        <view class="switch-row">
+          <text class="param-label">📐 压缩线稿到指定尺寸</text>
+          <switch checked="{{enableResize}}" bindchange="toggleResize" color="#4A90D9" />
+        </view>
+        <text class="param-desc">勾选后将线稿压缩到 32×32 像素，默认开启</text>
+      </view>
+      <view class="param-item {{!enableResize ? 'disabled' : ''}}">
+        <view class="slider-row">
+          <text class="param-label">输出宽度 (px)</text>
+          <text class="slider-value">{{outputWidth}}</text>
+        </view>
+        <slider 
+          min="8" max="512" step="1" 
+          value="{{outputWidth}}" 
+          disabled="{{!enableResize}}"
+          bindchanging="onWidthChange"
+          bindchange="onWidthChange"
+          color="#66BB6A" 
+          selected-color="#66BB6A"
+          block-size="20"
+        />
+      </view>
+      <view class="param-item {{!enableResize ? 'disabled' : ''}}">
+        <view class="slider-row">
+          <text class="param-label">输出高度 (px)</text>
+          <text class="slider-value">{{outputHeight}}</text>
+        </view>
+        <slider 
+          min="8" max="512" step="1" 
+          value="{{outputHeight}}" 
+          disabled="{{!enableResize}}"
+          bindchanging="onHeightChange"
+          bindchange="onHeightChange"
+          color="#66BB6A" 
+          selected-color="#66BB6A"
+          block-size="20"
+        />
+      </view>
     </view>
+
 
     <!-- ===== 操作按钮 ===== -->
     <view class="action-section">

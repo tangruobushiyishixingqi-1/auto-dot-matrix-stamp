@@ -9,9 +9,13 @@ Page({
     mode: 'default',        // 提取模式
     useClahe: false,        // 是否启用 CLAHE
     claheClip: 2.0,         // CLAHE 对比度系数
+    enableResize: true,     // 是否压缩输出尺寸
+    outputWidth: 32,        // 输出宽度
+    outputHeight: 32,       // 输出高度
     isProcessing: false,    // 是否正在处理
     apiBase: API_BASE,      // API 地址
   },
+
 
   // === 图片选择 ===
   chooseImage() {
@@ -47,14 +51,33 @@ Page({
     this.setData({ claheClip: Math.round(e.detail.value * 10) / 10 });
   },
 
+  // === 输出尺寸控制 ===
+  toggleResize(e) {
+    this.setData({ enableResize: e.detail.value });
+  },
+
+  onWidthChange(e) {
+    this.setData({ outputWidth: Math.round(e.detail.value) });
+  },
+
+  onHeightChange(e) {
+    this.setData({ outputHeight: Math.round(e.detail.value) });
+  },
+
   // === 核心推理（使用 wx.uploadFile，可直接读取 http://tmp/ 路径）===
   generateSketch() {
     const that = this;
-    const { inputImage, mode, useClahe, claheClip, apiBase } = this.data;
+    const { inputImage, mode, useClahe, claheClip, enableResize, outputWidth, outputHeight, apiBase } = this.data;
 
     if (!inputImage) {
       wx.showToast({ title: '请先选择图片', icon: 'none' });
       return;
+    }
+
+    // 构造 output_size 参数
+    let outputSizeStr = '';
+    if (enableResize && outputWidth > 0 && outputHeight > 0) {
+      outputSizeStr = `${outputWidth},${outputHeight}`;
     }
 
     that.setData({ isProcessing: true });
@@ -68,7 +91,9 @@ Page({
         mode: mode,
         use_clahe: useClahe ? 'true' : 'false',
         clahe_clip: String(claheClip),
+        output_size: outputSizeStr,
       },
+
       success(resp) {
         try {
           const json = JSON.parse(resp.data);

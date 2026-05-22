@@ -181,6 +181,7 @@ def sketch2anime(
     mode: str = "default",
     use_clahe: bool = False,
     clahe_clip: float = 2.0,
+    output_size: Optional[Tuple[int, int]] = None,
 ) -> Image.Image:
     """
     完整推理流水线：普通图像 → 日系动漫风格中粗实线黑白线稿。
@@ -189,6 +190,7 @@ def sketch2anime(
       阶段 A — 预处理: 读取 → CLAHE(可选) → 灰度
       阶段 B — 核心线稿: XDoG → 骨架化(1px) → 去毛刺 → 均匀膨胀 → 边缘柔化
       阶段 C — 后处理: BICUBIC 回弹 → 纯黑纯白二值化
+      阶段 D — 压缩（可选）: 将最终线稿压缩到指定尺寸（如 32×32）
 
     输出：纯线条（不填充任何封闭区域），white bg + black lines
 
@@ -197,9 +199,13 @@ def sketch2anime(
         mode:      "default"（3px，精细）或 "improved"（4px，稍粗漫画风）
         use_clahe: 是否启用 CLAHE 增强（默认 False）
         clahe_clip: CLAHE 对比度限制系数（默认 2.0）
+        output_size: 输出线稿的目标尺寸 (width, height)，
+                     例如 (32, 32) 将线稿压缩到 32×32 像素。
+                     默认 None 表示保持原始分辨率。
 
     Returns:
-        恢复原始分辨率的纯黑白线稿 PIL Image
+        纯黑白线稿 PIL Image。若指定 output_size，则尺寸为 output_size；
+        否则恢复原始分辨率。
     """
     pil_image, aus_resize = data.read_img_path(img_obj)
     if use_clahe:
@@ -215,7 +221,13 @@ def sketch2anime(
     result_np = np.array(result_pil)
     _, result_np = cv2.threshold(result_np, 127, 255, cv2.THRESH_BINARY)
     result_pil = Image.fromarray(result_np)
+
+    # ---- 阶段 D：压缩到指定输出尺寸（如 32×32） ----
+    if output_size is not None:
+        result_pil = result_pil.resize(output_size, Image.NEAREST)
+
     return result_pil
+
 
 
 # =============================================================================
@@ -251,6 +263,15 @@ if __name__ == "__main__":
     rn = np.array(r1)
     print(f"       唯一值: {np.unique(rn)}")
     print("       ✓ 通过")
+    print("\n[测试 5] sketch2anime 压缩到 32×32")
+    r3 = sketch2anime(dummy_pil, mode="default", output_size=(32, 32))
+    assert isinstance(r3, Image.Image) and r3.size == (32, 32) and r3.mode == "RGB"
+    print(f"       size: {r3.size} ✓")
+    print("\n[测试 6] sketch2anime 压缩到 64×64 (improved)")
+    r4 = sketch2anime(dummy_pil, mode="improved", use_clahe=True, output_size=(64, 64))
+    assert isinstance(r4, Image.Image) and r4.size == (64, 64)
+    print(f"       size: {r4.size} ✓")
     print("\n" + "=" * 70)
+
     print("所有测试通过 ✓")
     print("=" * 70)
