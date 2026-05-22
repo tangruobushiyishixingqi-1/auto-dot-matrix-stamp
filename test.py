@@ -151,7 +151,11 @@ def _dilate_from_skeleton(
 # =============================================================================
 # 完整管线：XDoG → 骨架(1px) → 去毛刺 → 均匀膨胀 → 边缘柔化
 # =============================================================================
-def _anime_line_pipeline(img_gray: np.ndarray, mode: str = "default") -> np.ndarray:
+def _anime_line_pipeline(
+    img_gray: np.ndarray,
+    mode: str = "default",
+    thickness_scale: float = 1.0,
+) -> np.ndarray:
     """
     管线：XDoG → 骨架化 → 去毛刺 → 均匀膨胀 → 边缘柔化
 
@@ -159,18 +163,32 @@ def _anime_line_pipeline(img_gray: np.ndarray, mode: str = "default") -> np.ndar
       - 1px 中心线保证相邻线膨胀时不会合并成块
       - 去毛刺去除短噪声
       - 均匀膨胀保证全图线宽一致
+
+    Args:
+        img_gray:        灰度图 [H, W] uint8
+        mode:            "default" 或 "improved"
+        thickness_scale: 线宽倍率，1.0=基准线宽，2.0=双倍粗，0.5=减半
     """
-    if mode == "improved":
-        binary = _xdog_line_drawing(img_gray, k_sigma=2.0, epsilon=-0.06, phi=8.0)
-        skel = _skeletonize(binary)
-        skel = _remove_spurs(skel, spur_length=4)
-        result = _dilate_from_skeleton(skel, target_width=4, smooth_radius=2)
-    else:
-        binary = _xdog_line_drawing(img_gray, k_sigma=1.5, epsilon=-0.14, phi=12.0)
-        skel = _skeletonize(binary)
-        skel = _remove_spurs(skel, spur_length=3)
-        result = _dilate_from_skeleton(skel, target_width=3, smooth_radius=2)
+    base_width = 4 if mode == "improved" else 3
+    target_width = max(1, int(round(base_width * max(0.25, thickness_scale))))
+    spur_length = max(1, int(round(3 * thickness_scale)))
+    result = _dilate_from_skeleton(
+        _remove_spurs(
+            _skeletonize(
+                _xdog_line_drawing(
+                    img_gray,
+                    k_sigma=2.0 if mode == "improved" else 1.5,
+                    epsilon=-0.06 if mode == "improved" else -0.14,
+                    phi=8.0 if mode == "improved" else 12.0,
+                )
+            ),
+            spur_length=spur_length,
+        ),
+        target_width=target_width,
+        smooth_radius=2,
+    )
     return result
+
 
 
 # =============================================================================
@@ -182,6 +200,7 @@ def sketch2anime(
     use_clahe: bool = False,
     clahe_clip: float = 2.0,
     output_size: Optional[Tuple[int, int]] = None,
+    thickness_scale: float = 1.0,
 ) -> Image.Image:
     """
     完整推理流水线：普通图像 → 日系动漫风格中粗实线黑白线稿。
@@ -195,13 +214,14 @@ def sketch2anime(
     输出：纯线条（不填充任何封闭区域），white bg + black lines
 
     Args:
-        img_obj:   输入图像（路径 或 PIL Image）
-        mode:      "default"（3px，精细）或 "improved"（4px，稍粗漫画风）
-        use_clahe: 是否启用 CLAHE 增强（默认 False）
-        clahe_clip: CLAHE 对比度限制系数（默认 2.0）
-        output_size: 输出线稿的目标尺寸 (width, height)，
-                     例如 (32, 32) 将线稿压缩到 32×32 像素。
-                     默认 None 表示保持原始分辨率。
+        img_obj:         输入图像（路径 或 PIL Image）
+        mode:            "default"（3px，精细）或 "improved"（4px，稍粗漫画风）
+        use_clahe:       是否启用 CLAHE 增强（默认 False）
+        clahe_clip:      CLAHE 对比度限制系数（默认 2.0）
+        output_size:     输出线稿的目标尺寸 (width, height)，
+                         例如 (32, 32) 将线稿压缩到 32×32 像素。
+                         默认 None 表示保持原始分辨率。
+        thickness_scale: 线宽倍率，1.0=基准线宽，2.0=双倍粗，0.5=减半（默认 1.0）
 
     Returns:
         纯黑白线稿 PIL Image。若指定 output_size，则尺寸为 output_size；
@@ -213,7 +233,8 @@ def sketch2anime(
         pil_image = Image.fromarray(enhanced_np)
     img_rgb = np.array(pil_image)
     img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
-    lineart = _anime_line_pipeline(img_gray, mode=mode)
+    lineart = _anime_line_pipeline(img_gray, mode=mode, thickness_scale=thickness_scale)
+
     _, lineart = cv2.threshold(lineart, 127, 255, cv2.THRESH_BINARY)
     lineart_rgb = cv2.cvtColor(lineart, cv2.COLOR_GRAY2RGB)
     result_pil = Image.fromarray(lineart_rgb)
@@ -271,7 +292,20 @@ if __name__ == "__main__":
     r4 = sketch2anime(dummy_pil, mode="improved", use_clahe=True, output_size=(64, 64))
     assert isinstance(r4, Image.Image) and r4.size == (64, 64)
     print(f"       size: {r4.size} ✓")
+    print("\n[测试 7] sketch2anime thickness_scale=2.0 (双倍粗)")
+    r5 = sketch2anime(dummy_pil, mode="default", thickness_scale=2.0)
+    assert isinstance(r5, Image.Image) and r5.size == (dummy_w, dummy_h)
+    print(f"       size: {r5.size} ✓")
+    print("\n[测试 8] sketch2anime thickness_scale=0.5 (减半)")
+    r6 = sketch2anime(dummy_pil, mode="default", thickness_scale=0.5)
+    assert isinstance(r6, Image.Image) and r6.size == (dummy_w, dummy_h)
+    print(f"       size: {r6.size} ✓")
+    print("\n[测试 9] sketch2anime 粗线 + 压缩 (thickness=3.0, 32×32)")
+    r7 = sketch2anime(dummy_pil, mode="default", thickness_scale=3.0, output_size=(32, 32))
+    assert isinstance(r7, Image.Image) and r7.size == (32, 32)
+    print(f"       size: {r7.size} ✓")
     print("\n" + "=" * 70)
+
 
     print("所有测试通过 ✓")
     print("=" * 70)

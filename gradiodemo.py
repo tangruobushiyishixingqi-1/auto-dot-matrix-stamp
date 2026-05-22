@@ -28,6 +28,7 @@ def process_image(
     mode: str,
     use_clahe: bool,
     clahe_clip: float,
+    thickness_scale: float,
     enable_resize: bool,
     output_width: int,
     output_height: int,
@@ -36,13 +37,14 @@ def process_image(
     Gradio 回调函数：将前端传入的图像与参数路由至 sketch2anime 推理流水线。
 
     Args:
-        input_image:  用户上传的 PIL Image（由 gr.Image(type="pil") 解析）
-        mode:         线稿提取模式 ("default" / "improved")
-        use_clahe:    是否启用 CLAHE 局部对比度增强
-        clahe_clip:   CLAHE 对比度限制系数
-        enable_resize: 是否启用压缩
-        output_width:  输出线稿宽度
-        output_height: 输出线稿高度
+        input_image:     用户上传的 PIL Image（由 gr.Image(type="pil") 解析）
+        mode:            线稿提取模式 ("default" / "improved")
+        use_clahe:       是否启用 CLAHE 局部对比度增强
+        clahe_clip:      CLAHE 对比度限制系数
+        thickness_scale: 线宽倍率，1.0=基准，2.0=双倍粗，0.5=减半
+        enable_resize:   是否启用压缩
+        output_width:    输出线稿宽度
+        output_height:   输出线稿高度
 
     Returns:
         黑白线稿 PIL Image。
@@ -66,11 +68,13 @@ def process_image(
             use_clahe=use_clahe,
             clahe_clip=clahe_clip,
             output_size=output_size,
+            thickness_scale=thickness_scale,
         )
         return result_pil
     except Exception as e:
         print(f"[gradiodemo] 推理过程出现异常: {e}")
         raise gr.Error(f"线稿生成失败: {e}")
+
 
 
 
@@ -171,7 +175,21 @@ def build_demo() -> gr.Blocks:
                 outputs=clahe_slider,
             )
 
+            # ===================== 线宽倍率调节 =====================
+            gr.Markdown("### ✏️ 线宽调节")
+            with gr.Row():
+                thickness_slider = gr.Slider(
+                    minimum=0.25,
+                    maximum=5.0,
+                    value=1.0,
+                    step=0.25,
+                    label="线宽倍率",
+                    info="1.0=基准线宽，2.0=双倍粗，0.5=减半",
+                    interactive=True,
+                )
+
             # ===================== 输出尺寸控制 =====================
+
             gr.Markdown("### 📐 输出尺寸控制")
             with gr.Row():
                 enable_resize = gr.Checkbox(
@@ -228,7 +246,7 @@ def build_demo() -> gr.Blocks:
 
         submit_btn.click(
             fn=process_image,
-            inputs=[input_image, mode_radio, clahe_checkbox, clahe_slider, enable_resize, output_width, output_height],
+            inputs=[input_image, mode_radio, clahe_checkbox, clahe_slider, thickness_slider, enable_resize, output_width, output_height],
             outputs=output_image,
             api_name="sketch2anime",
         )
@@ -236,9 +254,10 @@ def build_demo() -> gr.Blocks:
         # ---- 上传图像时自动触发推理 ----
         input_image.upload(
             fn=process_image,
-            inputs=[input_image, mode_radio, clahe_checkbox, clahe_slider, enable_resize, output_width, output_height],
+            inputs=[input_image, mode_radio, clahe_checkbox, clahe_slider, thickness_slider, enable_resize, output_width, output_height],
             outputs=output_image,
         )
+
 
 
         # ---- 清空按钮：重置所有组件 ----

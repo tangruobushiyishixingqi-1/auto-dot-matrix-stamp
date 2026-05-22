@@ -69,8 +69,27 @@
         <text class="param-desc">值越大对比度增强越强（1.0~5.0）</text>
       </view>
 
+      <!-- ===== 线宽倍率调节 ===== -->
+      <view class="param-item">
+        <view class="slider-row">
+          <text class="param-label">✏️ 线宽倍率</text>
+          <text class="slider-value">{{thicknessScale}}</text>
+        </view>
+        <slider 
+          min="0.25" max="5" step="0.25" 
+          value="{{thicknessScale}}" 
+          bindchanging="onThicknessChanging"
+          bindchange="onThicknessChange"
+          color="#FF9800" 
+          selected-color="#FF9800"
+          block-size="20"
+        />
+        <text class="param-desc">1.0=基准线宽，2.0=双倍粗，0.5=减半</text>
+      </view>
+
       <!-- ===== 输出尺寸控制 ===== -->
       <view class="param-item">
+
         <view class="switch-row">
           <text class="param-label">📐 压缩线稿到指定尺寸</text>
           <switch checked="{{enableResize}}" bindchange="toggleResize" color="#4A90D9" />

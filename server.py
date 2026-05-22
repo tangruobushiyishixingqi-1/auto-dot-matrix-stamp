@@ -105,6 +105,7 @@ def sketch2anime_upload_api():
         - use_clahe: "true"/"false"（默认 "false"）
         - clahe_clip: 对比度系数（默认 2.0）
         - output_size: 输出尺寸，格式 "width,height"，如 "32,32"（可选）
+        - thickness_scale: 线宽倍率，如 "1.5"（可选，默认 1.0）
 
     返回:
         {
@@ -127,12 +128,18 @@ def sketch2anime_upload_api():
     use_clahe_str = request.form.get("use_clahe", "false")
     clahe_clip_str = request.form.get("clahe_clip", "2.0")
     output_size_str = request.form.get("output_size", "")
+    thickness_scale_str = request.form.get("thickness_scale", "1.0")
     use_clahe = use_clahe_str.lower() == "true"
     try:
         clahe_clip = float(clahe_clip_str)
     except ValueError:
         clahe_clip = 2.0
+    try:
+        thickness_scale = float(thickness_scale_str)
+    except ValueError:
+        thickness_scale = 1.0
     output_size = _parse_output_size(output_size_str)
+
 
     if mode not in ("default", "improved"):
         return jsonify({"success": False, "error": f"不支持的 mode='{mode}'"}), 400
@@ -152,8 +159,10 @@ def sketch2anime_upload_api():
             use_clahe=use_clahe,
             clahe_clip=clahe_clip,
             output_size=output_size,
+            thickness_scale=thickness_scale,
         )
         # ---- 5. 编码为 Base64 PNG ----
+
         img_buffer = io.BytesIO()
         result_pil.save(img_buffer, format="PNG")
         img_buffer.seek(0)
@@ -182,6 +191,7 @@ def sketch2anime_api():
         - use_clahe: 是否启用 CLAHE，可选 "true" 或 "false"（默认 "false"）
         - clahe_clip: CLAHE 对比度限制系数（默认 2.0）
         - output_size: 输出尺寸，格式 "width,height"，如 "32,32"（可选）
+        - thickness_scale: 线宽倍率，如 "1.5"（可选，默认 1.0）
 
     返回:
         - 成功: 200, image/png（线稿图片二进制数据）
@@ -200,12 +210,17 @@ def sketch2anime_api():
     use_clahe_str = request.form.get("use_clahe", "false")
     clahe_clip_str = request.form.get("clahe_clip", "2.0")
     output_size_str = request.form.get("output_size", "")
+    thickness_scale_str = request.form.get("thickness_scale", "1.0")
 
     use_clahe = use_clahe_str.lower() == "true"
     try:
         clahe_clip = float(clahe_clip_str)
     except ValueError:
         clahe_clip = 2.0
+    try:
+        thickness_scale = float(thickness_scale_str)
+    except ValueError:
+        thickness_scale = 1.0
     output_size = _parse_output_size(output_size_str)
 
     # ---- 3. 验证模式 ----
@@ -227,7 +242,9 @@ def sketch2anime_api():
             use_clahe=use_clahe,
             clahe_clip=clahe_clip,
             output_size=output_size,
+            thickness_scale=thickness_scale,
         )
+
 
 
         # ---- 6. 将结果编码为 PNG 二进制流 ----
@@ -296,6 +313,7 @@ def sketch2anime_b64_api():
     use_clahe = data.get("use_clahe", False)
     clahe_clip = data.get("clahe_clip", 2.0)
     output_size_str = data.get("output_size", "")
+    thickness_scale = data.get("thickness_scale", 1.0)
     output_size = _parse_output_size(output_size_str)
 
     # ---- 执行推理 ----
@@ -306,7 +324,9 @@ def sketch2anime_b64_api():
             use_clahe=use_clahe,
             clahe_clip=clahe_clip,
             output_size=output_size,
+            thickness_scale=thickness_scale,
         )
+
 
 
         # ---- 编码结果为 Base64 PNG ----
