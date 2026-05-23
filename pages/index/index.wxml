@@ -1,5 +1,5 @@
 <!-- pages/index/index.wxml —— 图像转黑白线稿主页 -->
-<scroll-view class="scrollarea" scroll-y type="list">
+<scroll-view class="scrollarea" scroll-y>
   <view class="container">
     
     <!-- ===== 标题区域 ===== -->
@@ -165,10 +165,30 @@
     <view class="footer">
       <view class="footer-title">📖 使用说明</view>
       <text class="footer-text">1. 点击上方区域选择或拍摄一张彩色照片</text>
-      <text class="footer-text">2. 根据需要调整提取模式和对比度参数</text>
-      <text class="footer-text">3. 点击「生成线稿」按钮提交处理</text>
-      <text class="footer-text">4. 预览线稿结果，可保存至相册</text>
+      <text class="footer-text">2. 选择后自动弹出裁剪框，可拖动/缩放裁剪为正方形(1:1)</text>
+      <text class="footer-text">3. 点击「确认裁剪」后，根据需要调整提取模式和对比度参数</text>
+      <text class="footer-text">4. 点击「生成线稿」按钮提交处理</text>
+      <text class="footer-text">5. 预览线稿结果，可保存至相册</text>
     </view>
 
   </view>
 </scroll-view>
+
+<!-- ===== 图片裁剪弹窗 ===== -->
+<view wx:if="{{showCropper}}" class="cropper-overlay cropper-show">
+  <view class="cropper-header">
+    <view class="cropper-btn" catchtap="onCropperCancel">取消</view>
+    <view class="cropper-title">裁剪图片 (1:1)</view>
+    <view class="cropper-btn cropper-btn-confirm" catchtap="onCropperConfirm">确认</view>
+  </view>
+  <view class="cropper-body">
+    <canvas 
+      type="2d" 
+      id="cropperCanvas" 
+      class="cropper-canvas"
+      catchtouchstart="_onCropTouchStart"
+      catchtouchmove="_onCropTouchMove"
+      catchtouchend="_onCropTouchEnd"
+    />
+  </view>
+</view>
