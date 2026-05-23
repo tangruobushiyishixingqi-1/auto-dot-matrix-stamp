@@ -146,18 +146,27 @@
     <!-- ===== 结果展示 ===== -->
     <view class="result-section" wx:if="{{resultImage}}">
       <view class="section-label">🖼️ 线稿结果</view>
-      <view class="result-box">
-        <image src="{{resultImage}}" mode="aspectFit" class="result-img" />
-      </view>
+      
+      <!-- 压缩模式：显示可交互马赛克（支持点击翻转黑白） -->
+      <block wx:if="{{enableResize}}">
+        <view class="result-box">
+          <image id="mosaicImage" src="{{mosaicSrc || resultImage}}" mode="aspectFit" class="result-canvas" catchtap="onMosaicTap" />
+          <canvas type="2d" id="hiddenMosaicCanvas" class="hidden-mosaic-canvas" />
+        </view>
+        <view class="mosaic-coords-hint">📐 点击 32×32 格子翻转黑白</view>
+      </block>
+      
+      <!-- 非压缩模式：仅展示原始线稿 -->
+      <block wx:else>
+        <view class="result-box">
+          <image src="{{resultImage}}" mode="aspectFit" class="result-canvas" />
+        </view>
+      </block>
       
       <!-- 操作按钮组 -->
       <view class="result-actions">
-        <button class="action-btn save-btn" bindtap="saveImage">
-          💾 保存到相册
-        </button>
-        <button class="action-btn retry-btn" bindtap="resetAll">
-          🔄 重新生成
-        </button>
+        <button class="action-btn save-btn" bindtap="saveImage">💾 保存到相册</button>
+        <button class="action-btn retry-btn" bindtap="resetAll">🔄 重新生成</button>
       </view>
     </view>
 

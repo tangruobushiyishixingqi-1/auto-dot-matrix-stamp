@@ -11,6 +11,11 @@
   flex-direction: column;
   gap: 24rpx;
   padding: 30rpx 32rpx 60rpx;
+  /* 覆盖 app.wxss 中全局 .container 的冲突属性，确保正常文档流滚动 */
+  height: auto;
+  justify-content: flex-start;
+  align-items: stretch;
+  box-sizing: border-box;
 }
 
 /* ===== 标题区域 ===== */
@@ -246,11 +251,20 @@
   align-items: center;
   justify-content: center;
 }
-.result-img {
+.result-canvas {
   width: 100%;
-  max-height: 600rpx;
-  object-fit: contain;
+  height: 600rpx;
+  border-radius: 8rpx;
   display: block;
+}
+
+/* 隐藏 Canvas（只做像素级操作，不干扰页面滚动） */
+.hidden-mosaic-canvas {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  width: 320px;
+  height: 320px;
 }
 
 /* ---- 结果操作按钮 ---- */
@@ -333,6 +347,14 @@
   width: 100%;
   height: 750rpx;
   border-radius: 12rpx;
+}
+
+.mosaic-coords-hint {
+  font-size: 22rpx;
+  color: #90a4ae;
+  text-align: center;
+  margin-top: 12rpx;
+  display: block;
 }
 
 /* ===== 底部说明 ===== */
