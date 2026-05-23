@@ -311,11 +311,11 @@ Page({
   },
 
   onThicknessChanging(e) {
-    this.setData({ thicknessScale: Math.round(e.detail.value * 100) / 100 });
+    this.setData({ thicknessScale: Math.round(e.detail.value * 10) / 10 });
   },
 
   onThicknessChange(e) {
-    this.setData({ thicknessScale: Math.round(e.detail.value * 100) / 100 });
+    this.setData({ thicknessScale: Math.round(e.detail.value * 10) / 10 });
   },
 
   toggleResize(e) {

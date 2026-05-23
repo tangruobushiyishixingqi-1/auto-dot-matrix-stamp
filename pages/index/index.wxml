@@ -76,7 +76,7 @@
           <text class="slider-value">{{thicknessScale}}</text>
         </view>
         <slider 
-          min="0.25" max="5" step="0.25" 
+          min="0" max="10" step="0.1" 
           value="{{thicknessScale}}" 
           bindchanging="onThicknessChanging"
           bindchange="onThicknessChange"
