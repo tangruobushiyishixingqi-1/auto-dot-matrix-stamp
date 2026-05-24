@@ -63,13 +63,41 @@ Page({
       wx.showToast({ title: '裁剪失败', icon: 'none' });
       return;
     }
+    // 自动设为最优线宽倍率（目标线宽 20px）
+    const optimal = this._calcOptimalThickness(this.data.mode);
     this.setData({
       inputImage: detail.tempFilePath,
       showCropper: false,
+      thicknessScale: optimal,
+    });
+    wx.showToast({
+      title: `推荐线宽倍率为 ${optimal}（目标线宽 20px）`,
+      icon: 'none',
+      duration: 2000,
     });
   },
 
-  setMode(e) { this.setData({ mode: e.currentTarget.dataset.mode }); },
+  /**
+   * 根据当前模式计算最优线宽倍率（目标线宽 = 20px）
+   * 公式：round(base_width * t) = 20 → t = 20 / base_width
+   * default 模式 base_width=3 → 推荐 6.67
+   * improved 模式 base_width=4 → 推荐 5.00
+   */
+  _calcOptimalThickness(mode) {
+    const baseWidth = mode === 'improved' ? 4 : 3;
+    return Math.round((20 / baseWidth) * 100) / 100;
+  },
+
+  setMode(e) {
+    const mode = e.currentTarget.dataset.mode;
+    const optimal = this._calcOptimalThickness(mode);
+    this.setData({ mode, thicknessScale: optimal });
+    wx.showToast({
+      title: `推荐线宽倍率为 ${optimal}（目标线宽 20px）`,
+      icon: 'none',
+      duration: 2000,
+    });
+  },
   toggleClahe(e) { this.setData({ useClahe: e.detail.value }); },
   onClaheClipChanging(e) { this.setData({ claheClip: Math.round(e.detail.value*10)/10 }); },
   onClaheClipChange(e) { this.setData({ claheClip: Math.round(e.detail.value*10)/10 }); },
