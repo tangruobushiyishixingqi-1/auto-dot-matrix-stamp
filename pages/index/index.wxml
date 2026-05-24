@@ -183,21 +183,10 @@
   </view>
 </scroll-view>
 
-<!-- ===== 图片裁剪弹窗 ===== -->
-<view wx:if="{{showCropper}}" class="cropper-overlay cropper-show">
-  <view class="cropper-header">
-    <view class="cropper-btn" catchtap="onCropperCancel">取消</view>
-    <view class="cropper-title">裁剪图片 (1:1)</view>
-    <view class="cropper-btn cropper-btn-confirm" catchtap="onCropperConfirm">确认</view>
-  </view>
-  <view class="cropper-body">
-    <canvas 
-      type="2d" 
-      id="cropperCanvas" 
-      class="cropper-canvas"
-      catchtouchstart="_onCropTouchStart"
-      catchtouchmove="_onCropTouchMove"
-      catchtouchend="_onCropTouchEnd"
-    />
-  </view>
-</view>
+<!-- ===== 图片裁剪弹窗（使用 crop-handles 组件） ===== -->
+<crop-handles 
+  src="{{cropperSrc}}" 
+  show="{{showCropper}}" 
+  bind:cropperconfirm="onCropperConfirm"
+  bind:croppercancel="onCropperCancel" 
+/>

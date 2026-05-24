@@ -17,15 +17,6 @@ Page({
     apiBase: API_BASE,      // API 地址
     showCropper: false,     // 是否显示裁剪弹窗
     cropperSrc: '',         // 传给裁剪的图片路径
-    // 裁剪相关（1:1 正方形）
-    cropX: 0,
-    cropY: 0,
-    cropSize: 200,
-    imgW: 0,
-    imgH: 0,
-    imgX: 0,
-    imgY: 0,
-    canvasW: 375,
     // ===== 马赛克翻转编辑器 =====
     M: 32,
     mosaicSrc: '',      // 给 <image> 显示的图片路径
@@ -40,16 +31,7 @@ Page({
   // 标记用户是否做过编辑
   _resEdited: false,
 
-  _canvas: null,
-  _ctx: null,
-  _imgObj: null,
-  _dragStart: null,
-  _pinchStart: null,
-  _cropImgSrc: '',
-  _cl: 0,
-  _ct: 0,
-
-  // === 图片选择（选择后弹出裁剪框） ===
+  // === 图片选择（选择后弹出裁剪框，由 crop-handles 组件处理） ===
   chooseImage() {
     const that = this;
     wx.chooseImage({
@@ -58,147 +40,34 @@ Page({
       sourceType: ['album', 'camera'],
       success(res) {
         const tempPath = res.tempFilePaths[0];
-        that._cropImgSrc = tempPath;
         that.setData({
           cropperSrc: tempPath,
           showCropper: true,
           resultImage: '',
           mosaicSrc: '',
         });
-        setTimeout(() => that._initCropper(), 300);
+        // crop-handles 组件自动初始化并绘制
       },
     });
   },
 
-  // === 初始化裁剪器 ===
-  _initCropper() {
-    const that = this;
-    const query = wx.createSelectorQuery();
-    query.select('#cropperCanvas').fields({ node: true, size: true }).exec(r => {
-      if (!r || !r[0] || !r[0].node) {
-        setTimeout(() => that._initCropper(), 200);
-        return;
-      }
-      const canvas = r[0].node;
-      const ctx = canvas.getContext('2d');
-      const PR = wx.getWindowInfo().pixelRatio || 2;
-      const W = 375;
-      canvas.width = W * PR;
-      canvas.height = W * PR;
-      ctx.scale(PR, PR);
-      that._canvas = canvas;
-      that._ctx = ctx;
+  onCropperCancel() { this.setData({ showCropper: false }); },
 
-      query.select('#cropperCanvas').boundingClientRect(rect => {
-        if (rect) { that._cl = rect.left; that._ct = rect.top; }
-      }).exec();
-
-      const img = canvas.createImage();
-      img.onload = () => {
-        that._imgObj = img;
-        const w = W;
-        let dw, dh;
-        if (img.width / img.height > 1) {
-          dw = w; dh = w / img.width * img.height;
-        } else {
-          dh = w; dw = w / img.height * img.width;
-        }
-        const dx = (w - dw) / 2;
-        const dy = (w - dh) / 2;
-        let s = Math.min(dw, dh) * 0.8;
-        s = Math.max(80, Math.min(s, Math.min(dw, dh)));
-        const cx = Math.round(dx + (dw - s) / 2);
-        const cy = Math.round(dy + (dh - s) / 2);
-        that.setData({
-          imgW: dw, imgH: dh, imgX: dx, imgY: dy,
-          cropX: cx, cropY: cy, cropSize: Math.round(s),
-          canvasW: w,
-        });
-        that._drawCrop();
-      };
-      img.onerror = () => { wx.showToast({ title: '图片加载失败', icon: 'none' }); };
-      img.src = that._cropImgSrc;
+  /**
+   * 裁剪确认 —— 由 crop-handles 组件通过 bind:cropperconfirm 触发
+   * e.detail: { tempFilePath, width, height }
+   */
+  onCropperConfirm(e) {
+    const detail = e.detail;
+    if (!detail || !detail.tempFilePath) {
+      wx.showToast({ title: '裁剪失败', icon: 'none' });
+      return;
+    }
+    this.setData({
+      inputImage: detail.tempFilePath,
+      showCropper: false,
     });
   },
-
-  _drawCrop() {
-    const ctx = this._ctx, canvas = this._canvas, img = this._imgObj;
-    if (!ctx || !canvas || !img) return;
-    const { cropX, cropY, cropSize, imgX, imgY, imgW, imgH } = this.data;
-    const PR = wx.getWindowInfo().pixelRatio || 2;
-    const W = this.data.canvasW;
-    canvas.width = W * PR; canvas.height = W * PR;
-    ctx.scale(PR, PR);
-    ctx.clearRect(0, 0, W, W);
-    ctx.drawImage(img, imgX, imgY, imgW, imgH);
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillRect(0, 0, W, cropY);
-    ctx.fillRect(0, cropY + cropSize, W, W - cropY - cropSize);
-    ctx.fillRect(0, cropY, cropX, cropSize);
-    ctx.fillRect(cropX + cropSize, cropY, W - cropX - cropSize, cropSize);
-    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
-    ctx.strokeRect(cropX, cropY, cropSize, cropSize);
-    ctx.lineWidth = 4; ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 4;
-    const G = 2, L = 22;
-    ctx.beginPath(); ctx.moveTo(cropX+G,cropY+G); ctx.lineTo(cropX+G,cropY+G+L); ctx.moveTo(cropX+G,cropY+G); ctx.lineTo(cropX+G+L,cropY+G); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cropX+cropSize-G,cropY+G); ctx.lineTo(cropX+cropSize-G,cropY+G+L); ctx.moveTo(cropX+cropSize-G,cropY+G); ctx.lineTo(cropX+cropSize-G-L,cropY+G); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cropX+G,cropY+cropSize-G); ctx.lineTo(cropX+G,cropY+cropSize-G-L); ctx.moveTo(cropX+G,cropY+cropSize-G); ctx.lineTo(cropX+G+L,cropY+cropSize-G); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cropX+cropSize-G,cropY+cropSize-G); ctx.lineTo(cropX+cropSize-G,cropY+cropSize-G-L); ctx.moveTo(cropX+cropSize-G,cropY+cropSize-G); ctx.lineTo(cropX+cropSize-G-L,cropY+cropSize-G); ctx.stroke();
-    ctx.shadowBlur = 0;
-  },
-
-  _onCropTouchStart(e) {
-    if (!this._imgObj) return;
-    if (e.touches.length === 1) {
-      this._dragStart = { x: e.touches[0].clientX - this._cl, y: e.touches[0].clientY - this._ct, cx: this.data.cropX, cy: this.data.cropY };
-    } else if (e.touches.length === 2) {
-      const dx = e.touches[1].clientX - e.touches[0].clientX, dy = e.touches[1].clientY - e.touches[0].clientY;
-      this._pinchStart = { dist: Math.sqrt(dx*dx+dy*dy), size: this.data.cropSize };
-    }
-  },
-
-  _onCropTouchMove(e) {
-    if (!this._imgObj) return;
-    if (this._dragStart && e.touches.length === 1) {
-      const nx = e.touches[0].clientX - this._cl, ny = e.touches[0].clientY - this._ct;
-      let x = this._dragStart.cx + (nx - this._dragStart.x), y = this._dragStart.cy + (ny - this._dragStart.y);
-      const { imgX, imgY, imgW, imgH, cropSize } = this.data;
-      x = Math.max(imgX, Math.min(x, imgX+imgW-cropSize)); y = Math.max(imgY, Math.min(y, imgY+imgH-cropSize));
-      this.setData({ cropX: Math.round(x), cropY: Math.round(y) }); this._drawCrop();
-    } else if (this._pinchStart && e.touches.length === 2) {
-      const dx = e.touches[1].clientX - e.touches[0].clientX, dy = e.touches[1].clientY - e.touches[0].clientY;
-      const d = Math.sqrt(dx*dx+dy*dy); if (this._pinchStart.dist <= 0) return;
-      let s = Math.round(this._pinchStart.size * d / this._pinchStart.dist);
-      const { imgX, imgY, imgW, imgH, cropX, cropY, cropSize: os } = this.data;
-      s = Math.max(80, Math.min(s, Math.min(imgW, imgH)));
-      const cx_ = cropX+os/2, cy_ = cropY+os/2;
-      let x = Math.round(cx_-s/2), y = Math.round(cy_-s/2);
-      x = Math.max(imgX, Math.min(x, imgX+imgW-s)); y = Math.max(imgY, Math.min(y, imgY+imgH-s));
-      this.setData({ cropSize: s, cropX: x, cropY: y }); this._drawCrop();
-    }
-  },
-
-  _onCropTouchEnd() { this._dragStart = null; this._pinchStart = null; },
-
-  onCropperCancel() { this.setData({ showCropper: false }); this._cleanup(); },
-
-  onCropperConfirm() {
-    const that = this, canvas = this._canvas, ctx = this._ctx, img = this._imgObj;
-    if (!canvas || !ctx || !img) { wx.showToast({ title: '裁剪失败', icon: 'none' }); return; }
-    const { cropX, cropY, cropSize, imgW } = this.data;
-    const PR = wx.getWindowInfo().pixelRatio || 2, scale = img.width / imgW, ow = Math.round(cropSize * scale);
-    wx.showLoading({ title: '裁剪中...' });
-    const W = 375; canvas.width = W * PR; canvas.height = W * PR; ctx.scale(PR, PR);
-    ctx.clearRect(0, 0, W, W); ctx.drawImage(img, this.data.imgX, this.data.imgY, imgW, this.data.imgH);
-    wx.canvasToTempFilePath({
-      x: cropX, y: cropY, width: cropSize, height: cropSize, destWidth: ow, destHeight: ow,
-      canvas, fileType: 'png', quality: 1,
-      success(res) { wx.hideLoading(); that.setData({ inputImage: res.tempFilePath, showCropper: false }); that._cleanup(); },
-      fail(e) { wx.hideLoading(); console.error(e); wx.showToast({ title: '裁剪失败', icon: 'none' }); },
-    });
-  },
-
-  _cleanup() { this._imgObj = null; this._canvas = null; this._ctx = null; this._dragStart = null; this._pinchStart = null; },
 
   setMode(e) { this.setData({ mode: e.currentTarget.dataset.mode }); },
   toggleClahe(e) { this.setData({ useClahe: e.detail.value }); },

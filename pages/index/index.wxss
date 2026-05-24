@@ -222,12 +222,13 @@
   transform: scale(0.97);
   opacity: 0.9;
 }
-.generate-btn[disabled] {
-  background: #b0bec5;
-  box-shadow: none;
-}
 .generate-btn.processing {
   background: #78909c;
+}
+/* glass-easel 不允许 [disabled] 属性选择器，用类名替代 */
+.generate-btn.disabled {
+  background: #b0bec5;
+  box-shadow: none;
 }
 
 /* ===== 结果展示 ===== */
@@ -297,56 +298,6 @@
 }
 .retry-btn:active {
   background: #eeeeee;
-}
-
-/* ===== 裁剪弹窗遮罩 ===== */
-.cropper-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.85);
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-}
-
-.cropper-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 28rpx 32rpx;
-  background: #ffffff;
-  flex-shrink: 0;
-}
-.cropper-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #2c3e50;
-}
-.cropper-btn {
-  font-size: 28rpx;
-  color: #7f8c8d;
-  padding: 8rpx 16rpx;
-}
-.cropper-btn-confirm {
-  color: #4A90D9;
-  font-weight: 600;
-}
-
-.cropper-body {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20rpx;
-  min-height: 0;
-}
-.cropper-canvas {
-  width: 100%;
-  height: 750rpx;
-  border-radius: 12rpx;
 }
 
 .mosaic-coords-hint {

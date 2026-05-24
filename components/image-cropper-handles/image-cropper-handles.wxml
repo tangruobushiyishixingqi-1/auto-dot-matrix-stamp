@@ -1,0 +1,122 @@
+<!-- components/image-cropper-handles/image-cropper-handles.wxml -->
+<!--
+  wx:if 保证每次 show→true 时，组件被重新创建，DOM 重新渲染，
+  ready() 重新触发，Canvas 等子节点可安全查询。
+-->
+<view wx:if="{{show}}" class="cropper-overlay">
+  <view class="cropper-wrapper">
+    <view class="cropper-header">
+      <view class="toolbar-btn cancel" bindtap="onCancel">取消</view>
+      <view class="toolbar-title">裁剪图片 (1:1)</view>
+      <view class="toolbar-btn confirm" bindtap="onConfirm">确认</view>
+    </view>
+    <view class="cropper-canvas-area" id="cropperCanvasArea">
+      <!-- Canvas：只绘制图片 + 遮罩 -->
+      <canvas type="2d" id="cropCanvas" class="cropper-canvas" />
+
+      <!--
+        【定位系统】
+        所有裁剪相关元素（crop-box / crop-center / handles）都是
+        .cropper-canvas-area 的直接子节点，position: absolute 相对于此父级。
+        父级已设置 position: relative; overflow: hidden;。
+
+        cx, cy = 裁剪框左上角坐标（相对于 canvas 左上角）
+        cs     = 裁剪框尺寸（宽高相等，1:1）
+
+        控制点使用 transform: translate(-50%, -50%) 精确定位，
+        将其中心点对齐到裁剪框的顶点或边中点。
+        不再使用手动 -15px / -12px 偏移 hack。
+      -->
+      <view
+        class="crop-box"
+        style="left:{{cx}}px; top:{{cy}}px; width:{{cs}}px; height:{{cs}}px;"
+      />
+
+      <view
+        class="crop-center"
+        data-part="center"
+        style="left:{{cx}}px; top:{{cy}}px; width:{{cs}}px; height:{{cs}}px;"
+        bindtouchstart="onTouchStart"
+        bindtouchmove="onTouchMove"
+        bindtouchend="onTouchEnd"
+      />
+
+      <!-- 八个控制点：四个角 + 四条边中点 -->
+      <!-- 全部使用 transform: translate(-50%,-50%) 居中定位 -->
+
+      <!-- 左上角 TL -->
+      <view
+        class="handle handle-tl"
+        data-part="handle" data-handle="tl"
+        style="left:{{cx}}px; top:{{cy}}px;"
+        catchtouchstart="onTouchStart"
+        catchtouchmove="onTouchMove"
+        catchtouchend="onTouchEnd"
+      />
+      <!-- 右上角 TR -->
+      <view
+        class="handle handle-tr"
+        data-part="handle" data-handle="tr"
+        style="left:{{cx + cs}}px; top:{{cy}}px;"
+        catchtouchstart="onTouchStart"
+        catchtouchmove="onTouchMove"
+        catchtouchend="onTouchEnd"
+      />
+      <!-- 左下角 BL -->
+      <view
+        class="handle handle-bl"
+        data-part="handle" data-handle="bl"
+        style="left:{{cx}}px; top:{{cy + cs}}px;"
+        catchtouchstart="onTouchStart"
+        catchtouchmove="onTouchMove"
+        catchtouchend="onTouchEnd"
+      />
+      <!-- 右下角 BR -->
+      <view
+        class="handle handle-br"
+        data-part="handle" data-handle="br"
+        style="left:{{cx + cs}}px; top:{{cy + cs}}px;"
+        catchtouchstart="onTouchStart"
+        catchtouchmove="onTouchMove"
+        catchtouchend="onTouchEnd"
+      />
+
+      <!-- 上边中点 TOP -->
+      <view
+        class="handle handle-top"
+        data-part="handle" data-handle="top"
+        style="left:{{cx + cs / 2}}px; top:{{cy}}px;"
+        catchtouchstart="onTouchStart"
+        catchtouchmove="onTouchMove"
+        catchtouchend="onTouchEnd"
+      />
+      <!-- 下边中点 BOTTOM -->
+      <view
+        class="handle handle-bottom"
+        data-part="handle" data-handle="bottom"
+        style="left:{{cx + cs / 2}}px; top:{{cy + cs}}px;"
+        catchtouchstart="onTouchStart"
+        catchtouchmove="onTouchMove"
+        catchtouchend="onTouchEnd"
+      />
+      <!-- 左边中点 LEFT -->
+      <view
+        class="handle handle-left"
+        data-part="handle" data-handle="left"
+        style="left:{{cx}}px; top:{{cy + cs / 2}}px;"
+        catchtouchstart="onTouchStart"
+        catchtouchmove="onTouchMove"
+        catchtouchend="onTouchEnd"
+      />
+      <!-- 右边中点 RIGHT -->
+      <view
+        class="handle handle-right"
+        data-part="handle" data-handle="right"
+        style="left:{{cx + cs}}px; top:{{cy + cs / 2}}px;"
+        catchtouchstart="onTouchStart"
+        catchtouchmove="onTouchMove"
+        catchtouchend="onTouchEnd"
+      />
+    </view>
+  </view>
+</view>

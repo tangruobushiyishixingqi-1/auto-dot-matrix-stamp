@@ -1,6 +1,7 @@
 {
   "usingComponents": {
-    "image-cropper": "/components/image-cropper/image-cropper"
+    "image-cropper": "/components/image-cropper/image-cropper",
+    "crop-handles": "/components/image-cropper-handles/image-cropper-handles"
   },
   "navigationBarTitleText": "图像转线稿"
 }
