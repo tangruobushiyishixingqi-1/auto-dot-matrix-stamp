@@ -14,8 +14,8 @@
       <text class="footer-text">1. 点击上方区域选择或拍摄一张彩色照片</text>
       <text class="footer-text">2. 选择后自动弹出裁剪框，可拖动/缩放裁剪为正方形(1:1)</text>
       <text class="footer-text">3. 点击「确认裁剪」后，根据需要调整提取模式和对比度参数</text>
-      <text class="footer-text">4. 点击「生成线稿」按钮提交处理</text>
-      <text class="footer-text">5. 预览线稿结果，可保存至相册</text>
+      <text class="footer-text">4. 点击「生成图片」按钮提交处理</text>
+      <text class="footer-text">5. 预览图片处理结果，可保存至相册</text>
     </view>
 
     <!-- ===== 图片上传区域 ===== -->
@@ -171,7 +171,7 @@
         disabled="{{!inputImage || isProcessing}}"
         bindtap="generateSketch"
       >
-        <text wx:if="{{!isProcessing}}">🔄 生成线稿</text>
+        <text wx:if="{{!isProcessing}}">🔄 生成图片</text>
         <text wx:else>⏳ 处理中...</text>
       </button>
       <text class="btn-hint">每次修改参数后请点击此按键</text>

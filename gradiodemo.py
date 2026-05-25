@@ -231,7 +231,7 @@ def build_demo() -> gr.Blocks:
 
         with gr.Row():
             submit_btn = gr.Button(
-                value="🔄 生成线稿",
+                value="🔄 生成图片",
                 variant="primary",
                 scale=2,
             )
@@ -242,7 +242,7 @@ def build_demo() -> gr.Blocks:
             )
 
         # ===================== 事件绑定 =====================
-        # ---- 点击"生成线稿"按钮 → 执行推理 ----
+        # ---- 点击"生成图片"按钮 → 执行推理 ----
 
         submit_btn.click(
             fn=process_image,
@@ -275,7 +275,7 @@ def build_demo() -> gr.Blocks:
             ### 📖 使用说明
             1. **拖拽或点击上传** 彩色照片到左侧区域
             2. 在 **参数设置** 中选择提取模式和 CLAHE 选项
-            3. 点击 **🔄 生成线稿** 按钮或按 Enter 键提交
+            3. 点击 **🔄 生成图片** 按钮或按 Enter 键提交
             4. 右侧展示区将显示 AI 提取的黑白线稿结果
             """
         )

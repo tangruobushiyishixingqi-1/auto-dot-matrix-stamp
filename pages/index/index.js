@@ -197,7 +197,7 @@ Page({
     if (enableResize && outputWidth > 0 && outputHeight > 0) outputSizeStr = outputWidth + ',' + outputHeight;
     console.log('[generateSketch] SENDING output_size:', outputSizeStr);
 
-    that.setData({ isProcessing: true }); wx.showLoading({ title: '⏳ 生成线稿中...' });
+    that.setData({ isProcessing: true }); wx.showLoading({ title: '⏳ 生成图片中...' });
     wx.uploadFile({
       url: apiBase + '/api/sketch2anime_upload', filePath: inputImage, name: 'image',
       formData: { mode: mode, use_clahe: useClahe ? 'true' : 'false', clahe_clip: String(claheClip), thickness_scale: String(thicknessScale), output_size: outputSizeStr },
@@ -213,7 +213,7 @@ Page({
               success: function() {
                 console.log('[generateSketch] FILE SAVED — tempFilePath:', tempFilePath);
                 that.setData({ resultImage: tempFilePath, isProcessing: false, mosaicSrc: tempFilePath });
-                wx.hideLoading(); wx.showToast({ title: '✅ 线稿生成成功', icon: 'success' });
+                wx.hideLoading(); wx.showToast({ title: '图片处理成功', icon: 'success' });
                 setTimeout(function() { console.log('[generateSketch] Calling _initMosaic now'); that._initMosaic(); }, 600);
               },
               fail: function(err) { console.error('写入结果失败:', err); that.setData({ isProcessing: false }); wx.hideLoading(); wx.showToast({ title: '❌ 结果保存失败', icon: 'none' }); },

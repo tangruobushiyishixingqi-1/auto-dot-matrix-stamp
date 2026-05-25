@@ -3,5 +3,5 @@
     "image-cropper": "/components/image-cropper/image-cropper",
     "crop-handles": "/components/image-cropper-handles/image-cropper-handles"
   },
-  "navigationBarTitleText": "图像转线稿"
+  "navigationBarTitleText": "印章处理器"
 }
