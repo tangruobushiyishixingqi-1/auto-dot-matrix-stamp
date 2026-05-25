@@ -19,17 +19,17 @@ Page({
     showCropper: false,     // 是否显示裁剪弹窗
     cropperSrc: '',         // 传给裁剪的图片路径
     // ===== 马赛克翻转编辑器 =====
-    M: 32,
     mosaicSrc: '',      // 给 <image> 显示的图片路径
     // ===== 内联键盘输入状态 =====
     editingKey: null,   // 当前正在编辑的参数名，null 表示未编辑
     editingValue: '',   // 编辑框中的临时文本
   },
 
-  // 隐藏 Canvas 引用（离屏，320x320 固定尺寸，只用于像素操作）
+  // 隐藏 Canvas 引用（离屏，用于像素操作）
   _mosaicCanvas: null,
   _mosaicCtx: null,
   _mosaicInitialized: false,
+  _mosaicCellSize: 10,
   // 内存中的网格数据（只存内存，绝不触发 setData 刷新！）
   _mosaicGridData: null,
   // 标记用户是否做过编辑
@@ -188,9 +188,15 @@ Page({
     var outputWidth = this.data.outputWidth;
     var outputHeight = this.data.outputHeight;
     var apiBase = this.data.apiBase;
+
+    // ---- [LOG] Debug: check input values before sending ----
+    console.log('[generateSketch] STATE VALUES — enableResize:', enableResize, 'outputWidth:', outputWidth, 'outputHeight:', outputHeight);
+
     if (!inputImage) { wx.showToast({ title: '请先选择图片', icon: 'none' }); return; }
     var outputSizeStr = '';
     if (enableResize && outputWidth > 0 && outputHeight > 0) outputSizeStr = outputWidth + ',' + outputHeight;
+    console.log('[generateSketch] SENDING output_size:', outputSizeStr);
+
     that.setData({ isProcessing: true }); wx.showLoading({ title: '⏳ 生成线稿中...' });
     wx.uploadFile({
       url: apiBase + '/api/sketch2anime_upload', filePath: inputImage, name: 'image',
@@ -198,15 +204,17 @@ Page({
       success: function(resp) {
         try {
           var json = JSON.parse(resp.data);
+          console.log('[generateSketch] SERVER RESPONSE — success:', json.success, 'width:', json.width, 'height:', json.height, 'error:', json.error);
           if (resp.statusCode === 200 && json.success && json.image_base64) {
             var fs = wx.getFileSystemManager();
             var tempFilePath = wx.env.USER_DATA_PATH + '/sketch_result_' + Date.now() + '.png';
             fs.writeFile({
               filePath: tempFilePath, data: wx.base64ToArrayBuffer(json.image_base64), encoding: 'binary',
               success: function() {
+                console.log('[generateSketch] FILE SAVED — tempFilePath:', tempFilePath);
                 that.setData({ resultImage: tempFilePath, isProcessing: false, mosaicSrc: tempFilePath });
                 wx.hideLoading(); wx.showToast({ title: '✅ 线稿生成成功', icon: 'success' });
-                setTimeout(function() { that._initMosaic(); }, 600);
+                setTimeout(function() { console.log('[generateSketch] Calling _initMosaic now'); that._initMosaic(); }, 600);
               },
               fail: function(err) { console.error('写入结果失败:', err); that.setData({ isProcessing: false }); wx.hideLoading(); wx.showToast({ title: '❌ 结果保存失败', icon: 'none' }); },
             });
@@ -245,30 +253,44 @@ Page({
 
   _initMosaic: function() {
     var that = this;
+    var cols = this.data.outputWidth > 0 ? this.data.outputWidth : 32;
+    var rows = this.data.outputHeight > 0 ? this.data.outputHeight : 32;
+    console.log('[_initMosaic] Grid dimensions:', cols, 'x', rows);
+
+    // 动态计算格子大小，防止超大尺寸撑爆 Canvas（最大 640px）
+    var maxDim = 640;
+    var cellBase = 10;
+    var cellSize = (cols * cellBase > maxDim || rows * cellBase > maxDim)
+      ? Math.min(Math.floor(maxDim / cols), Math.floor(maxDim / rows), cellBase)
+      : cellBase;
+    var W = cols * cellSize;
+    var H = rows * cellSize;
+
     var query = wx.createSelectorQuery();
     query.select('#hiddenMosaicCanvas').fields({ node: true, size: true }).exec(function(r) {
       if (!r || !r[0] || !r[0].node) { setTimeout(function() { that._initMosaic(); }, 300); return; }
       var canvas = r[0].node;
       var ctx = canvas.getContext('2d');
-      var SIZE = 320;
-      canvas.width = SIZE; canvas.height = SIZE;
+      canvas.width = W; canvas.height = H;
       that._mosaicCanvas = canvas;
       that._mosaicCtx = ctx;
+      that._mosaicCellSize = cellSize;
 
       var img = canvas.createImage();
       img.onload = function() {
-        ctx.clearRect(0, 0, SIZE, SIZE);
-        ctx.drawImage(img, 0, 0, SIZE, SIZE);
-        var imageData = ctx.getImageData(0, 0, SIZE, SIZE);
+        ctx.clearRect(0, 0, W, H);
+        ctx.drawImage(img, 0, 0, W, H);
+        var imageData = ctx.getImageData(0, 0, W, H);
         var pixels = imageData.data;
-        var cellSize = SIZE / 32;
         var grid = [];
-        for (var row = 0; row < 32; row++) {
+        for (var row = 0; row < rows; row++) {
           var gRow = [];
-          for (var col = 0; col < 32; col++) {
+          for (var col = 0; col < cols; col++) {
             var px = Math.round(col * cellSize + cellSize / 2);
             var py = Math.round(row * cellSize + cellSize / 2);
-            var idx = (py * SIZE + px) * 4;
+            if (px >= W) px = W - 1;
+            if (py >= H) py = H - 1;
+            var idx = (py * W + px) * 4;
             var gray = (pixels[idx] + pixels[idx + 1] + pixels[idx + 2]) / 3;
             gRow.push(gray > 128 ? 1 : 0);
           }
@@ -276,6 +298,7 @@ Page({
         }
         that._mosaicGridData = grid;
         that._mosaicInitialized = true;
+        console.log('[_initMosaic] Grid built:', rows, 'rows x', cols, 'cols');
         that._syncMosaicToImage();
       };
       img.onerror = function() { console.error('马赛克图片加载失败'); };
@@ -288,26 +311,33 @@ Page({
     var canvas = this._mosaicCanvas;
     var grid = this._mosaicGridData;
     if (!ctx || !canvas || !grid) return;
-    var SIZE = 320, cellSize = 10, M = 32;
+    var rows = grid.length;
+    var cols = grid[0] ? grid[0].length : 0;
+    if (rows === 0 || cols === 0) return;
+    var cellSize = this._mosaicCellSize || 10;
+    var W = cols * cellSize;
+    var H = rows * cellSize;
 
-    ctx.clearRect(0, 0, SIZE, SIZE);
-    for (var r = 0; r < M; r++) {
-      for (var c = 0; c < M; c++) {
+    ctx.clearRect(0, 0, W, H);
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
         var v = (grid[r] && grid[r][c] !== undefined) ? grid[r][c] : 0;
         ctx.fillStyle = v === 1 ? '#ffffff' : '#000000';
         ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
       }
     }
     ctx.strokeStyle = 'rgba(200,200,200,0.4)'; ctx.lineWidth = 0.5;
-    for (var i = 0; i <= M; i++) {
-      ctx.beginPath(); ctx.moveTo(i * cellSize, 0); ctx.lineTo(i * cellSize, SIZE); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0, i * cellSize); ctx.lineTo(SIZE, i * cellSize); ctx.stroke();
+    for (var i = 0; i <= cols; i++) {
+      ctx.beginPath(); ctx.moveTo(i * cellSize, 0); ctx.lineTo(i * cellSize, H); ctx.stroke();
+    }
+    for (var i = 0; i <= rows; i++) {
+      ctx.beginPath(); ctx.moveTo(0, i * cellSize); ctx.lineTo(W, i * cellSize); ctx.stroke();
     }
 
     var that = this;
     wx.canvasToTempFilePath({
       canvas: canvas, fileType: 'png', quality: 1,
-      success: function(res) { that.setData({ mosaicSrc: res.tempFilePath }); },
+      success: function(res) { console.log('[_syncMosaicToImage] Exported mosaic, mosaicSrc set'); that.setData({ mosaicSrc: res.tempFilePath }); },
       fail: function(e) { console.error('导出马赛克失败:', e); },
     }, this);
   },
@@ -321,15 +351,18 @@ Page({
     var query = wx.createSelectorQuery();
     query.select('#mosaicImage').boundingClientRect(function(rect) {
       if (!rect || !rect.width || !rect.height) return;
+      var grid = that._mosaicGridData;
+      var rows = grid.length;
+      var cols = grid[0] ? grid[0].length : 0;
+      if (rows === 0 || cols === 0) return;
       var clickX = ct.clientX - rect.left;
       var clickY = ct.clientY - rect.top;
-      var w = rect.width / 32;
-      var h = rect.height / 32;
+      var w = rect.width / cols;
+      var h = rect.height / rows;
       var col = Math.floor(clickX / w);
       var row = Math.floor(clickY / h);
-      if (col < 0 || col >= 32 || row < 0 || row >= 32) return;
+      if (col < 0 || col >= cols || row < 0 || row >= rows) return;
 
-      var grid = that._mosaicGridData;
       grid[row][col] = grid[row][col] === 0 ? 1 : 0;
       that._resEdited = true;
       that._syncMosaicToImage();
