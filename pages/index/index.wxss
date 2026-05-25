@@ -131,6 +131,14 @@
   margin-bottom: 12rpx;
 }
 
+/* ---- 滑块范围提示小字 ---- */
+.param-range {
+  font-size: 20rpx;
+  color: #b0bec5;
+  margin-left: 8rpx;
+  flex-shrink: 0;
+}
+
 .param-desc {
   font-size: 22rpx;
   color: #90a4ae;
@@ -140,8 +148,8 @@
 
 /* ---- 推荐线宽倍率小字 ---- */
 .param-recommend {
-  font-size: 20rpx;
-  color: #b0bec5;
+  font-size: 22rpx;
+  color: #90a4ae;
   display: block;
   margin-top: 4rpx;
 }
@@ -202,15 +210,47 @@
 .slider-row .param-label {
   margin-bottom: 0;
 }
+
+/* ---- 标签与范围提示水平排列 ---- */
+.slider-label-wrapper {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  max-width: 70%;
+  overflow: hidden;
+}
+.slider-label-wrapper .param-label {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
 .slider-value {
   font-size: 28rpx;
   font-weight: 600;
   color: #4A90D9;
 }
+.inline-input {
+  width: 120rpx;
+  height: 56rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #4A90D9;
+  text-align: center;
+  background: #ffffff;
+  border: 2rpx solid #4A90D9;
+  border-radius: 8rpx;
+  padding: 0 8rpx;
+}
 
 /* ===== 操作按钮 ===== */
 .action-section {
   flex-shrink: 0;
+}
+.btn-hint {
+  font-size: 22rpx;
+  color: #90a4ae;
+  text-align: center;
+  display: block;
+  margin-top: 12rpx;
 }
 .generate-btn {
   width: 100%;

@@ -21,6 +21,9 @@ Page({
     // ===== 马赛克翻转编辑器 =====
     M: 32,
     mosaicSrc: '',      // 给 <image> 显示的图片路径
+    // ===== 内联键盘输入状态 =====
+    editingKey: null,   // 当前正在编辑的参数名，null 表示未编辑
+    editingValue: '',   // 编辑框中的临时文本
   },
 
   // 隐藏 Canvas 引用（离屏，320x320 固定尺寸，只用于像素操作）
@@ -101,56 +104,76 @@ Page({
   onWidthChange: function(e) { this.setData({ outputWidth: Math.round(e.detail.value) }); },
   onHeightChange: function(e) { this.setData({ outputHeight: Math.round(e.detail.value) }); },
 
-  // ===== 参数值点击键盘输入 =====
-  onClaheClipTap: function() {
-    this._showNumPrompt('claheClip', this.data.claheClip, 1, 5, 0.1);
-  },
+  // ===== 参数值点击键盘输入（内联输入框，支持 Enter 确认） =====
+  // _pendingKey / _pendingValue 为局部变量，不受 bindblur 清空影响，
+  // 避免 WeChat 小程序中 bindblur 先于 bindconfirm 触发时丢失编辑目标
+  _pendingKey: null,
+  _pendingValue: '',
 
-  onThicknessTap: function() {
-    this._showNumPrompt('thicknessScale', this.data.thicknessScale, 0, 10, 0.1);
-  },
-
-  onWidthTap: function() {
-    this._showNumPrompt('outputWidth', this.data.outputWidth, 8, 512, 1);
-  },
-
-  onHeightTap: function() {
-    this._showNumPrompt('outputHeight', this.data.outputHeight, 8, 512, 1);
-  },
-
-  _showNumPrompt: function(key, currentVal, min, max, step) {
-    var that = this;
-    wx.showModal({
-      title: '输入数值',
-      content: '',
-      editable: true,
-      placeholderText: '当前值 ' + currentVal + '（范围 ' + min + '~' + max + '）',
-      success: function(res) {
-        if (res.confirm) {
-          var inputStr = (res.content || '').trim();
-          if (inputStr === '') { return; }
-          var newVal = parseFloat(inputStr);
-          if (isNaN(newVal)) {
-            wx.showToast({ title: '请输入有效数字', icon: 'none' });
-            return;
-          }
-          if (step >= 1) {
-            newVal = Math.round(newVal);
-          } else {
-            newVal = Math.round(newVal * 10) / 10;
-          }
-          if (newVal < min) { newVal = min; }
-          if (newVal > max) { newVal = max; }
-          var obj = {};
-          obj[key] = newVal;
-          that.setData(obj);
-          if (key === 'thicknessScale') {
-            var optimal = that._calcOptimalThickness(that.data.mode);
-            that.setData({ recommendedThickness: optimal });
-          }
-        }
-      },
+  startEdit: function(e) {
+    var key = e.currentTarget.dataset.key;
+    this._pendingKey = key;
+    var currentVal = this.data[key];
+    this._pendingValue = String(currentVal);
+    this.setData({
+      editingKey: key,
+      editingValue: String(currentVal),
     });
+  },
+
+  onEditInput: function(e) {
+    this._pendingValue = e.detail.value;
+    this.setData({ editingValue: e.detail.value });
+  },
+
+  confirmEdit: function() {
+    var key = this._pendingKey;
+    var inputStr = (this._pendingValue || '').trim();
+    if (!key || inputStr === '') { this.setData({ editingKey: null, editingValue: '' }); this._pendingKey = null; this._pendingValue = ''; return; }
+
+    var configs = {
+      claheClip: { min: 1, max: 5, step: 0.1 },
+      thicknessScale: { min: 0, max: 10, step: 0.1 },
+      outputWidth: { min: 8, max: 512, step: 1 },
+      outputHeight: { min: 8, max: 512, step: 1 },
+    };
+    var cfg = configs[key];
+    if (!cfg) { this.setData({ editingKey: null, editingValue: '' }); this._pendingKey = null; this._pendingValue = ''; return; }
+
+    var newVal = parseFloat(inputStr);
+    if (isNaN(newVal)) {
+      wx.showToast({ title: '请输入有效数字', icon: 'none' });
+      return;
+    }
+    if (cfg.step >= 1) { newVal = Math.round(newVal); }
+    else { newVal = Math.round(newVal * 10) / 10; }
+    if (newVal < cfg.min) { newVal = cfg.min; }
+    if (newVal > cfg.max) { newVal = cfg.max; }
+
+    var obj = {};
+    obj[key] = newVal;
+    obj.editingKey = null;
+    obj.editingValue = '';
+    this._pendingKey = null;
+    this._pendingValue = '';
+    this.setData(obj);
+
+    if (key === 'thicknessScale') {
+      var optimal = this._calcOptimalThickness(this.data.mode);
+      this.setData({ recommendedThickness: optimal });
+    }
+  },
+
+  cancelEdit: function() {
+    this.setData({ editingKey: null, editingValue: '' });
+  },
+
+
+
+  onKeyDown: function(e) {
+    // 针对小程序 input 组件，使用 bindconfirm + bindblur 组合处理
+    // bindconfirm 在点击键盘"完成"按钮时触发
+    // 这里只是保留以备需要
   },
 
   // === 核心推理 ===

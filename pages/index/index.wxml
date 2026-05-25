@@ -4,8 +4,18 @@
     
     <!-- ===== 标题区域 ===== -->
     <view class="header">
-      <text class="title">🎨 图像→黑白线稿</text>
-      <text class="subtitle">上传彩色照片，AI 自动提取高质量线稿</text>
+      <text class="title">🎨 图像→黑白线稿→印章</text>
+      <text class="subtitle">上传彩色照片，AI 自动提取高质量线稿并生成印章效果</text>
+    </view>
+
+    <!-- ===== 使用说明 ===== -->
+    <view class="footer">
+      <view class="footer-title">📖 使用说明</view>
+      <text class="footer-text">1. 点击上方区域选择或拍摄一张彩色照片</text>
+      <text class="footer-text">2. 选择后自动弹出裁剪框，可拖动/缩放裁剪为正方形(1:1)</text>
+      <text class="footer-text">3. 点击「确认裁剪」后，根据需要调整提取模式和对比度参数</text>
+      <text class="footer-text">4. 点击「生成线稿」按钮提交处理</text>
+      <text class="footer-text">5. 预览线稿结果，可保存至相册</text>
     </view>
 
     <!-- ===== 图片上传区域 ===== -->
@@ -38,7 +48,6 @@
             <text class="radio-text">模式2</text>
           </view>
         </view>
-        <text class="param-desc">improved 模式可消除棋盘伪影</text>
       </view>
 
       <!-- CLAHE 开关 -->
@@ -54,7 +63,10 @@
       <view class="param-item {{!useClahe ? 'disabled' : ''}}">
         <view class="slider-row">
           <text class="param-label">对比度限制系数</text>
-          <text class="slider-value" bindtap="onClaheClipTap">{{claheClip}}</text>
+          <block wx:if="{{editingKey === 'claheClip'}}">
+            <input class="inline-input" type="digit" value="{{editingValue}}" bindinput="onEditInput" bindconfirm="confirmEdit" bindblur="cancelEdit" focus="true" />
+          </block>
+          <text wx:else class="slider-value" bindtap="startEdit" data-key="claheClip">{{claheClip}}</text>
         </view>
         <slider 
           min="1" max="5" step="0.1" 
@@ -72,8 +84,14 @@
       <!-- ===== 线宽倍率调节 ===== -->
       <view class="param-item">
         <view class="slider-row">
-          <text class="param-label">✏️ 线宽倍率</text>
-          <text class="slider-value" bindtap="onThicknessTap">{{thicknessScale}}</text>
+          <view class="slider-label-wrapper">
+            <text class="param-label">✏️ 线宽倍率</text>
+            <text class="param-range">(范围: 0 - 10)</text>
+          </view>
+          <block wx:if="{{editingKey === 'thicknessScale'}}">
+            <input class="inline-input" type="digit" value="{{editingValue}}" bindinput="onEditInput" bindconfirm="confirmEdit" bindblur="cancelEdit" focus="true" />
+          </block>
+          <text wx:else class="slider-value" bindtap="startEdit" data-key="thicknessScale">{{thicknessScale}}</text>
         </view>
         <slider 
           min="0" max="10" step="0.1" 
@@ -99,8 +117,14 @@
       </view>
       <view class="param-item {{!enableResize ? 'disabled' : ''}}">
         <view class="slider-row">
-          <text class="param-label">输出宽度 (px)</text>
-          <text class="slider-value" bindtap="onWidthTap">{{outputWidth}}</text>
+          <view class="slider-label-wrapper">
+            <text class="param-label">输出宽度 (px)</text>
+            <text class="param-range">(范围: 8 - 512)</text>
+          </view>
+          <block wx:if="{{editingKey === 'outputWidth'}}">
+            <input class="inline-input" type="number" value="{{editingValue}}" bindinput="onEditInput" bindconfirm="confirmEdit" bindblur="cancelEdit" focus="true" />
+          </block>
+          <text wx:else class="slider-value" bindtap="startEdit" data-key="outputWidth">{{outputWidth}}</text>
         </view>
         <slider 
           min="8" max="512" step="1" 
@@ -112,11 +136,18 @@
           selected-color="#66BB6A"
           block-size="20"
         />
+        <text class="param-desc">本印章仅可打印32*32像素点</text>
       </view>
       <view class="param-item {{!enableResize ? 'disabled' : ''}}">
         <view class="slider-row">
-          <text class="param-label">输出高度 (px)</text>
-          <text class="slider-value" bindtap="onHeightTap">{{outputHeight}}</text>
+          <view class="slider-label-wrapper">
+            <text class="param-label">输出高度 (px)</text>
+            <text class="param-range">(范围: 8 - 512)</text>
+          </view>
+          <block wx:if="{{editingKey === 'outputHeight'}}">
+            <input class="inline-input" type="number" value="{{editingValue}}" bindinput="onEditInput" bindconfirm="confirmEdit" bindblur="cancelEdit" focus="true" />
+          </block>
+          <text wx:else class="slider-value" bindtap="startEdit" data-key="outputHeight">{{outputHeight}}</text>
         </view>
         <slider 
           min="8" max="512" step="1" 
@@ -128,6 +159,7 @@
           selected-color="#66BB6A"
           block-size="20"
         />
+        <text class="param-desc">本印章仅可打印32*32像素点</text>
       </view>
     </view>
 
@@ -142,11 +174,12 @@
         <text wx:if="{{!isProcessing}}">🔄 生成线稿</text>
         <text wx:else>⏳ 处理中...</text>
       </button>
+      <text class="btn-hint">每次修改参数后请点击此按键</text>
     </view>
 
     <!-- ===== 结果展示 ===== -->
     <view class="result-section" wx:if="{{resultImage}}">
-      <view class="section-label">🖼️ 线稿结果</view>
+      <view class="section-label">🖼️ {{enableResize ? '印章预览' : '线稿结果'}}</view>
       
       <!-- 压缩模式：显示可交互马赛克（支持点击翻转黑白） -->
       <block wx:if="{{enableResize}}">
@@ -169,16 +202,6 @@
         <button class="action-btn save-btn" bindtap="saveImage">💾 保存到相册</button>
         <button class="action-btn retry-btn" bindtap="resetAll">🔄 重新生成</button>
       </view>
-    </view>
-
-    <!-- ===== 使用说明 ===== -->
-    <view class="footer">
-      <view class="footer-title">📖 使用说明</view>
-      <text class="footer-text">1. 点击上方区域选择或拍摄一张彩色照片</text>
-      <text class="footer-text">2. 选择后自动弹出裁剪框，可拖动/缩放裁剪为正方形(1:1)</text>
-      <text class="footer-text">3. 点击「确认裁剪」后，根据需要调整提取模式和对比度参数</text>
-      <text class="footer-text">4. 点击「生成线稿」按钮提交处理</text>
-      <text class="footer-text">5. 预览线稿结果，可保存至相册</text>
     </view>
 
   </view>
