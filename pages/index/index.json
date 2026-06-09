@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "image-cropper": "/components/image-cropper/image-cropper",
+    "crop-handles": "/components/image-cropper-handles/image-cropper-handles"
+  },
+  "navigationBarTitleText": "印章处理器"
+}

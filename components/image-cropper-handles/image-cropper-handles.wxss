@@ -1,0 +1,144 @@
+/* ========================================
+   image-cropper-handles.wxss
+   黑白极简风格 (High-Contrast B&W Minimalism)
+   ======================================== */
+
+/* ---------- 全局遮罩 ---------- */
+.cropper-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+}
+
+.cropper-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.cropper-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 40rpx;
+  background: #000000;
+}
+.toolbar-btn {
+  font-size: 26rpx;
+  padding: 12rpx 20rpx;
+  min-width: 120rpx;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1rpx;
+}
+.toolbar-btn.cancel { 
+  color: #999999; 
+  font-weight: 400;
+}
+.toolbar-btn.confirm { 
+  color: #FFFFFF; 
+  background: #000000; 
+  border: 1px solid #FFFFFF;
+  font-weight: 600;
+}
+.toolbar-title { 
+  color: #FFFFFF; 
+  font-size: 28rpx; 
+  letter-spacing: 2rpx;
+  text-transform: uppercase;
+}
+
+/* ---------- Canvas 容器 ---------- */
+.cropper-canvas-area {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 750rpx;
+  height: 750rpx;
+  overflow: hidden;
+  position: relative;
+}
+.cropper-canvas {
+  width: 750rpx;
+  height: 750rpx;
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+/* ============================================
+   裁剪框边框（纯视觉，不响应触摸）
+   ============================================ */
+.crop-box {
+  position: absolute;
+  z-index: 10;
+  outline: 2px solid rgba(255,255,255,0.9);
+  pointer-events: none;
+}
+
+/* ============================================
+   内部拖拽区
+   ============================================ */
+.crop-center {
+  position: absolute;
+  z-index: 10;
+  pointer-events: auto;
+  background: transparent;
+}
+
+/* ============================================
+   控制点样式 — 纯黑白
+   ============================================ */
+.handle {
+  position: absolute;
+  z-index: 20;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+}
+
+/* 角控制点 */
+.handle-tl,
+.handle-tr,
+.handle-bl,
+.handle-br {
+  width: 30px;
+  height: 30px;
+  background: #FFFFFF;
+  border: 2px solid #FFFFFF;
+  border-radius: 0;
+  background-clip: content-box;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* 边中点控制点 */
+.handle-top,
+.handle-bottom {
+  width: 24px;
+  height: 14px;
+  background: #FFFFFF;
+  border: 2px solid #FFFFFF;
+  border-radius: 0;
+  background-clip: content-box;
+  padding: 2px 3px;
+  box-sizing: border-box;
+}
+
+.handle-left,
+.handle-right {
+  width: 14px;
+  height: 24px;
+  background: #FFFFFF;
+  border: 2px solid #FFFFFF;
+  border-radius: 0;
+  background-clip: content-box;
+  padding: 3px 2px;
+  box-sizing: border-box;
+}

@@ -1,0 +1,10 @@
+{
+  "name": "community_service",
+  "version": "1.0.0",
+  "description": "社区匿名发布与获取云函数",
+  "main": "index.js",
+  "dependencies": {
+    "@cloudbase/wx-cloud-client-sdk": "^1.0.0",
+    "wx-server-sdk": "latest"
+  }
+}

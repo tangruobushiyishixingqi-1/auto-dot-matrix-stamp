@@ -1,0 +1,64 @@
+/* ========================================
+   image-cropper.wxss
+   黑白极简风格 (High-Contrast B&W Minimalism)
+   ======================================== */
+
+.cropper-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+}
+.cropper-overlay.show {
+  pointer-events: auto;
+}
+
+.cropper-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 40rpx;
+  background: #000000;
+}
+.toolbar-btn {
+  font-size: 26rpx;
+  padding: 12rpx 20rpx;
+  min-width: 120rpx;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1rpx;
+}
+.toolbar-btn.cancel { 
+  color: #999999; 
+  font-weight: 400;
+}
+.toolbar-btn.confirm { 
+  color: #FFFFFF; 
+  background: #000000; 
+  border: 1px solid #FFFFFF;
+  font-weight: 600;
+}
+.toolbar-title { 
+  color: #FFFFFF; 
+  font-size: 28rpx; 
+  letter-spacing: 2rpx;
+  text-transform: uppercase;
+}
+
+.cropper-canvas-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.cropper-canvas {
+  width: 750rpx;
+  height: 750rpx;
+  display: block;
+}

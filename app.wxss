@@ -1,0 +1,241 @@
+/* ========================================
+   app.wxss — 全局样式
+   黑白极简风格 (High-Contrast B&W Minimalism)
+   ======================================== */
+
+/* ===== 全局变量 ===== */
+page {
+  --color-black: #000000;
+  --color-white: #FFFFFF;
+  --color-dark-gray: #333333;
+  --color-light-gray: #EFEFEF;
+  --color-mid-gray: #999999;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  background: var(--color-white);
+  color: var(--color-black);
+  font-family: var(--font-sans);
+  font-size: 28rpx;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== 基础排版 ===== */
+.h1 {
+  font-size: 52rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+  text-transform: uppercase;
+  color: var(--color-black);
+  line-height: 1.3;
+}
+
+.h2 {
+  font-size: 40rpx;
+  font-weight: 700;
+  letter-spacing: 1.5rpx;
+  text-transform: uppercase;
+  color: var(--color-black);
+  line-height: 1.3;
+}
+
+.h3 {
+  font-size: 32rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+  color: var(--color-black);
+  line-height: 1.4;
+}
+
+.body-text {
+  font-size: 28rpx;
+  font-weight: 400;
+  color: var(--color-dark-gray);
+  line-height: 1.8;
+}
+
+.caption {
+  font-size: 22rpx;
+  font-weight: 400;
+  color: var(--color-mid-gray);
+  line-height: 1.6;
+}
+
+/* ===== 按钮基础 ===== */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 88rpx;
+  background: var(--color-black);
+  color: var(--color-white);
+  font-size: 28rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 0;
+  transition: opacity 0.2s ease;
+  padding: 0 32rpx;
+}
+
+.btn-primary:active {
+  opacity: 0.8;
+}
+
+.btn-primary.is-disabled {
+  background: var(--color-light-gray);
+  color: var(--color-mid-gray);
+  pointer-events: none;
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 88rpx;
+  background: var(--color-white);
+  color: var(--color-black);
+  font-size: 28rpx;
+  font-weight: 500;
+  letter-spacing: 1rpx;
+  text-transform: uppercase;
+  border: 2rpx solid var(--color-black);
+  border-radius: 0;
+  transition: all 0.2s ease;
+  padding: 0 32rpx;
+}
+
+.btn-secondary:active {
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.btn-secondary.is-disabled {
+  border-color: var(--color-light-gray);
+  color: var(--color-light-gray);
+  pointer-events: none;
+}
+
+/* ===== 卡片容器 ===== */
+.card {
+  background: var(--color-white);
+  border: 1px solid var(--color-black);
+  padding: 24rpx;
+}
+
+.card-light {
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-light-gray);
+  padding: 24rpx;
+}
+
+/* ===== 分割线 ===== */
+.divider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-light-gray);
+  margin: 16rpx 0;
+}
+
+.divider-black {
+  width: 100%;
+  height: 2rpx;
+  background: var(--color-black);
+  margin: 16rpx 0;
+}
+
+/* ===== 列表项 ===== */
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 0;
+  border-bottom: 1px solid var(--color-light-gray);
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.list-item-label {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--color-black);
+}
+
+.list-item-value {
+  font-size: 26rpx;
+  color: var(--color-dark-gray);
+}
+
+.list-item-arrow {
+  font-size: 32rpx;
+  color: var(--color-black);
+  line-height: 1;
+}
+
+/* ===== 标签/徽标 ===== */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6rpx 16rpx;
+  background: var(--color-black);
+  color: var(--color-white);
+  font-size: 20rpx;
+  font-weight: 500;
+  letter-spacing: 1rpx;
+  text-transform: uppercase;
+}
+
+.tag-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6rpx 16rpx;
+  background: transparent;
+  color: var(--color-black);
+  border: 1px solid var(--color-black);
+  font-size: 20rpx;
+  font-weight: 500;
+  letter-spacing: 1rpx;
+  text-transform: uppercase;
+}
+
+/* ===== 输入框 ===== */
+.input-field {
+  width: 100%;
+  height: 72rpx;
+  font-size: 26rpx;
+  color: var(--color-black);
+  background: var(--color-white);
+  border: 1px solid var(--color-black);
+  border-radius: 0;
+  padding: 0 16rpx;
+  box-sizing: border-box;
+}
+
+/* ===== 空状态 ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 160rpx 40rpx;
+  color: var(--color-mid-gray);
+  font-size: 28rpx;
+}
+
+/* ===== 加载指示器 ===== */
+.loading-bar {
+  text-align: center;
+  padding: 40rpx 0;
+  color: var(--color-mid-gray);
+  font-size: 24rpx;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+}

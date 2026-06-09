@@ -1,0 +1,131 @@
+/* ========================================
+   pages/community/community.wxss
+   黑白极简风格 (High-Contrast B&W Minimalism)
+   ======================================== */
+
+/* 页面容器 */
+.page-container {
+  min-height: 100vh;
+  background: #FFFFFF;
+  padding: 0 0 0;
+  box-sizing: border-box;
+}
+
+/* 加载提示 */
+.loading-bar {
+  text-align: center;
+  padding: 60rpx 0;
+  color: #999999;
+  font-size: 24rpx;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+}
+
+/* ===== 两列网格布局（CSS 瀑布流） ===== */
+.grid-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-content: flex-start;
+  padding: 0 24rpx;
+}
+
+.grid-column {
+  display: flex;
+  flex-direction: column;
+  width: calc(50% - 6rpx);
+}
+
+/* 每张照片卡片 */
+.photo-card {
+  width: 100%;
+  margin-bottom: 12rpx;
+  background: #FFFFFF;
+  border: 1px solid #000000;
+  overflow: hidden;
+}
+
+.photo-card:active {
+  opacity: 0.8;
+}
+
+/* 图片：宽100%，高度自适应 */
+.photo-card image {
+  width: 100%;
+  display: block;
+  border-bottom: 1px solid #000000;
+}
+
+/* 底部信息栏 */
+.photo-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 16rpx 20rpx 18rpx;
+  gap: 6rpx;
+}
+
+/* 点赞点击区域 */
+.like-area {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 6rpx 16rpx;
+  border: 1px solid #000000;
+  transition: all 0.2s;
+}
+
+.like-area:active {
+  background: #000000;
+}
+
+.like-area:active .like-icon,
+.like-area:active .like-count {
+  color: #FFFFFF;
+}
+
+/* 爱心图标 */
+.like-icon {
+  font-size: 28rpx;
+  line-height: 1;
+  color: #000000;
+  font-weight: 700;
+}
+
+/* 点赞数字 */
+.like-count {
+  font-size: 24rpx;
+  color: #000000;
+  line-height: 1;
+  font-weight: 500;
+}
+
+/* ===== 空状态提示 ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 40rpx;
+  color: #999999;
+  font-size: 28rpx;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+  line-height: 2;
+}
+
+.empty-state .empty-icon {
+  font-size: 60rpx;
+  color: #000000;
+  margin-bottom: 20rpx;
+}
+
+/* ===== 底部加载更多 ===== */
+.load-more-bar {
+  text-align: center;
+  padding: 40rpx 0 80rpx;
+  color: #999999;
+  font-size: 22rpx;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+}

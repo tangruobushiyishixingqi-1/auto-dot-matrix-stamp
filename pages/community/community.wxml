@@ -1,0 +1,76 @@
+<!-- ==========================================
+  pages/community/community.wxml
+  黑白极简风格 — 社区广场页面
+  两列网格布局，绝对匿名，无头像无昵称
+  ========================================== -->
+
+<view class="page-container">
+
+  <!-- 首次加载中 -->
+  <view class="loading-bar" wx:if="{{loading && photoList.length === 0}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 空状态：没有数据 -->
+  <view class="empty-state" wx:elif="{{!loading && photoList.length === 0}}">
+    <text class="empty-icon">[ 0 ]</text>
+    <text>还没有人发布作品</text>
+    <text>先去生成一张线稿吧</text>
+  </view>
+
+  <!-- 两列网格瀑布流 -->
+  <view class="grid-container" wx:else>
+    <!-- 左列 -->
+    <view class="grid-column">
+      <block wx:for="{{leftList}}" wx:key="_id">
+        <view class="photo-card">
+          <image
+            src="{{item.photo_url}}"
+            mode="widthFix"
+            lazy-load="true"
+            webp="{{true}}"
+            bindtap="onPreviewImage"
+            data-url="{{item.photo_url}}"
+          />
+          <view class="photo-footer">
+            <view class="like-area" bindtap="handleLike" data-id="{{item._id}}">
+              <text class="like-icon">&#9829;</text>
+              <text class="like-count">{{item.likes}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <!-- 右列 -->
+    <view class="grid-column">
+      <block wx:for="{{rightList}}" wx:key="_id">
+        <view class="photo-card">
+          <image
+            src="{{item.photo_url}}"
+            mode="widthFix"
+            lazy-load="true"
+            webp="{{true}}"
+            bindtap="onPreviewImage"
+            data-url="{{item.photo_url}}"
+          />
+          <view class="photo-footer">
+            <view class="like-area" bindtap="handleLike" data-id="{{item._id}}">
+              <text class="like-icon">&#9829;</text>
+              <text class="like-count">{{item.likes}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 加载更多指示器 -->
+  <view class="load-more-bar" wx:if="{{loading && photoList.length > 0}}">
+    <text>加载更多...</text>
+  </view>
+  <view class="load-more-bar" wx:elif="{{!hasMore && photoList.length > 0}}">
+    <text>— 已经到底啦 —</text>
+  </view>
+
+</view>

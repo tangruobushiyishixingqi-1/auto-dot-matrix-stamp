@@ -1,0 +1,36 @@
+/* ========================================
+   pages/logs/logs.wxss
+   黑白极简风格 (High-Contrast B&W Minimalism)
+   ======================================== */
+
+page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #FFFFFF;
+}
+
+.scrollarea {
+  flex: 1;
+  overflow-y: hidden;
+  padding: 0 32rpx;
+}
+
+.log-item {
+  margin-top: 0;
+  padding: 24rpx 0;
+  text-align: left;
+  font-size: 26rpx;
+  color: #333333;
+  border-bottom: 1px solid #EFEFEF;
+  line-height: 1.6;
+}
+
+.log-item:first-child {
+  margin-top: 20rpx;
+}
+
+.log-item:last-child {
+  padding-bottom: env(safe-area-inset-bottom);
+  border-bottom: none;
+}

@@ -1,0 +1,337 @@
+<!-- pages/index/index.wxml —— 黑白极简风格 -->
+<scroll-view class="scrollarea" scroll-y>
+  <view class="container">
+    
+    <!-- ===== 标题区域（仅初始选择页显示） ===== -->
+    <view class="header" wx:if="{{currentTab === ''}}">
+      <text class="title">印章处理器</text>
+      <text class="subtitle">上传彩色照片，AI 自动提取高质量线稿并生成印章效果</text>
+    </view>
+
+    <!-- ===== 初始选择页：Tab 切换栏 ===== -->
+    <view class="tab-bar" wx:if="{{currentTab === ''}}">
+      <view class="tab-item" data-tab="processor" bindtap="switchTab">
+        <text class="tab-title">自定义印章</text>
+        <text class="tab-subtitle">上传图片，得到专属于你的印章</text>
+      </view>
+      <view class="tab-item" data-tab="community" bindtap="switchTab">
+        <text class="tab-title">社区</text>
+        <text class="tab-subtitle">欣赏他人杰作</text>
+      </view>
+    </view>
+
+    <!-- ===== 子页面顶部栏：返回按钮 + 页面标题 ===== -->
+    <view class="subpage-header" wx:if="{{currentTab !== ''}}">
+      <view class="back-btn" bindtap="goBack">
+        <text class="back-text">返回</text>
+      </view>
+      <text class="subpage-title">{{currentTab === 'processor' ? '自定义印章' : '社区'}}</text>
+    </view>
+
+    <!-- ===== 自定义印章内容 ===== -->
+    <block wx:if="{{currentTab === 'processor'}}">
+
+      <!-- ===== 步骤一：选择图片来源 ===== -->
+      <block wx:if="{{imageSourceType === ''}}">
+        <!-- ===== 使用说明 ===== -->
+        <view class="footer">
+          <view class="footer-title">使用说明</view>
+          <text class="footer-text">1. 点击上方区域选择或拍摄一张彩色照片</text>
+          <text class="footer-text">2. 选择后自动弹出裁剪框，可拖动/缩放裁剪为正方形</text>
+          <text class="footer-text">3. 确认裁剪后，调整提取模式和对比度参数</text>
+          <text class="footer-text">4. 点击「生成图片」按钮提交处理</text>
+          <text class="footer-text">5. 预览图片处理结果，可保存至相册</text>
+        </view>
+
+        <!-- ===== 选择图片来源 ===== -->
+        <view class="upload-section">
+          <view class="section-label">选择图片</view>
+          <view class="source-type-row">
+            <view class="source-type-btn" bindtap="onChooseImageUpload">
+              <text class="source-type-icon">上传</text>
+              <text class="source-type-text">上传彩色照片</text>
+            </view>
+            <view class="source-type-btn" bindtap="onChooseMosaic">
+              <text class="source-type-icon">手绘</text>
+              <text class="source-type-text">手绘马赛克图案</text>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <!-- ===== 步骤二：已选择图片来源 ===== -->
+      <block wx:if="{{imageSourceType !== ''}}">
+        <!-- ===== 内层返回按钮 ===== -->
+        <view class="subpage-header">
+          <view class="back-btn" bindtap="goBackSourceType">
+            <text class="back-text">返回</text>
+          </view>
+          <text class="subpage-title">{{imageSourceType === 'upload' ? '上传彩色照片' : '手绘马赛克'}}</text>
+        </view>
+
+        <!-- 已上传图片预览 -->
+        <view wx:if="{{imageSourceType === 'upload' && inputImage}}" class="image-preview has-image">
+          <image src="{{inputImage}}" mode="aspectFit" class="preview-img" />
+        </view>
+      </block>
+
+      <!-- ===== 参数设置 ===== -->
+      <view class="params-section" wx:if="{{imageSourceType === 'upload' || imageSourceType === 'mosaic'}}">
+        <view class="section-label">参数设置</view>
+        
+        <!-- 模式选择（仅上传照片模式下显示） -->
+        <view class="param-item" wx:if="{{imageSourceType === 'upload'}}">
+          <text class="param-label">提取模式</text>
+          <view class="radio-group">
+            <view class="radio-item {{mode === 'default' ? 'active' : ''}}" bindtap="setMode" data-mode="default">
+              <text class="radio-dot {{mode === 'default' ? 'dot-active' : ''}}"></text>
+              <text class="radio-text">标准提取</text>
+            </view>
+            <view class="radio-item {{mode === 'improved' ? 'active' : ''}}" bindtap="setMode" data-mode="improved">
+              <text class="radio-dot {{mode === 'improved' ? 'dot-active' : ''}}"></text>
+              <text class="radio-text">增强平滑</text>
+            </view>
+          </view>
+          <text class="param-desc">标准：经典提取，速度快 | 增强：消除棋盘伪影，线条更平滑</text>
+        </view>
+
+        <!-- ===== 线宽倍率调节 ===== -->
+        <view class="param-item" wx:if="{{imageSourceType === 'upload'}}">
+          <view class="slider-row">
+            <view class="slider-label-wrapper">
+              <text class="param-label">线宽倍率</text>
+              <text class="param-range">(范围: 0-10)</text>
+            </view>
+            <block wx:if="{{editingKey === 'thicknessScale'}}">
+              <input class="inline-input" type="digit" value="{{editingValue}}" bindinput="onEditInput" bindconfirm="confirmEdit" bindblur="cancelEdit" focus="true" />
+            </block>
+            <text wx:else class="slider-value" bindtap="startEdit" data-key="thicknessScale">{{thicknessScale}}</text>
+          </view>
+          <slider 
+            min="0" max="10" step="0.1" 
+            value="{{thicknessScale}}" 
+            bindchanging="onThicknessChanging"
+            bindchange="onThicknessChange"
+            color="#000000" 
+            selected-color="#000000"
+            block-size="20"
+          />
+          <text class="param-desc">1.0=基准线宽，2.0=双倍粗</text>
+          <text class="param-recommend">推荐线宽倍率为 {{recommendedThickness}}</text>
+        </view>
+
+        <!-- ===== 输出尺寸控制 ===== -->
+        <view class="param-item" wx:if="{{imageSourceType !== 'mosaic'}}">
+          <view class="switch-row">
+            <text class="param-label">压缩线稿到指定尺寸</text>
+            <switch checked="{{enableResize}}" bindchange="toggleResize" color="#000000" />
+          </view>
+          <text class="param-desc">勾选后将线稿压缩到指定像素尺寸，默认 32x32</text>
+        </view>
+
+        <view class="param-item {{!enableResize ? 'disabled' : ''}}">
+          <view class="slider-row">
+            <view class="slider-label-wrapper">
+              <text class="param-label">输出宽度 (px)</text>
+              <text class="param-range">(范围: 8-512)</text>
+            </view>
+            <block wx:if="{{editingKey === 'outputWidth'}}">
+              <input class="inline-input" type="number" value="{{editingValue}}" bindinput="onEditInput" bindconfirm="confirmEdit" bindblur="cancelEdit" focus="true" />
+            </block>
+            <text wx:else class="slider-value" bindtap="startEdit" data-key="outputWidth">{{outputWidth}}</text>
+          </view>
+          <slider 
+            min="8" max="512" step="1" 
+            value="{{outputWidth}}" 
+            disabled="{{!enableResize}}"
+            bindchanging="onWidthChange"
+            bindchange="onWidthChange"
+            color="#000000" 
+            selected-color="#000000"
+            block-size="20"
+          />
+          <text class="param-desc">本印章仅可打印 32x32 像素点</text>
+        </view>
+        <view class="param-item {{!enableResize ? 'disabled' : ''}}">
+          <view class="slider-row">
+            <view class="slider-label-wrapper">
+              <text class="param-label">输出高度 (px)</text>
+              <text class="param-range">(范围: 8-512)</text>
+            </view>
+            <block wx:if="{{editingKey === 'outputHeight'}}">
+              <input class="inline-input" type="number" value="{{editingValue}}" bindinput="onEditInput" bindconfirm="confirmEdit" bindblur="cancelEdit" focus="true" />
+            </block>
+            <text wx:else class="slider-value" bindtap="startEdit" data-key="outputHeight">{{outputHeight}}</text>
+          </view>
+          <slider 
+            min="8" max="512" step="1" 
+            value="{{outputHeight}}" 
+            disabled="{{!enableResize}}"
+            bindchanging="onHeightChange"
+            bindchange="onHeightChange"
+            color="#000000" 
+            selected-color="#000000"
+            block-size="20"
+          />
+          <text class="param-desc">本印章仅可打印 32x32 像素点</text>
+        </view>
+      </view>
+
+      <!-- ===== 操作按钮 ===== -->
+      <view class="action-section" wx:if="{{imageSourceType === 'upload'}}">
+        <button 
+        class="generate-btn {{!isProcessing ? '' : 'processing'}} {{(!inputImage || isProcessing) ? 'is-disabled' : ''}}" 
+        disabled="{{!inputImage || isProcessing}}"
+          bindtap="generateSketch"
+        >
+          <text wx:if="{{!isProcessing}}">生成图片</text>
+          <text wx:else>处理中...</text>
+        </button>
+        <text class="btn-hint">每次修改参数后请点击此按钮</text>
+      </view>
+
+      <!-- ===== 结果展示 ===== -->
+      <view class="result-section" wx:if="{{resultImage || imageSourceType === 'mosaic'}}">
+        <view class="section-label">{{enableResize ? '印章预览' : '线稿结果'}}</view>
+        
+        <!-- 压缩模式：显示可交互马赛克画布 -->
+        <block wx:if="{{enableResize}}">
+          <view class="result-box">
+            <image id="mosaicCanvas" src="{{mosaicSrc}}" class="mosaic-canvas" mode="aspectFit"
+              bindtouchstart="onMosaicTouchStart"
+              bindtouchmove="onMosaicTouchMove"
+              bindtouchend="onMosaicTouchEnd"
+            />
+          </view>
+          <view class="mosaic-coords-hint">手指点击或拖动格子绘制印章图案</view>
+        </block>
+        
+        <!-- 非压缩模式 -->
+        <block wx:else>
+          <view class="result-box">
+            <image src="{{resultImage}}" mode="aspectFit" class="result-canvas" />
+          </view>
+        </block>
+        
+        <!-- 操作按钮组 -->
+        <view class="result-actions">
+          <view class="action-btn" bindtap="saveImage">保存到相册</view>
+          <view class="share-group">
+            <view class="action-btn" bindtap="shareToCommunity">匿名分享</view>
+            <text class="share-hint">分享到社区</text>
+          </view>
+          <view class="action-btn" bindtap="resetAll">重新生成</view>
+        </view>
+      </view>
+
+      <!-- ===== 手绘马赛克离屏 Canvas ===== -->
+      <canvas type="2d" id="hiddenMosaicCanvas" class="hidden-mosaic-canvas" />
+
+      <!-- ===== 蓝牙连接与硬件控制区域 ===== -->
+      <view class="ble-section">
+
+        <view class="section-label">蓝牙打印 (ESP32)</view>
+
+        <!-- UUID 配置（可折叠） -->
+        <view class="ble-config-toggle" bindtap="onBLEToggleConfig">
+          <text class="ble-config-toggle-text">UUID 配置 {{bleShowConfig ? '[-]' : '[+]'}}</text>
+        </view>
+        <view class="ble-config-body" wx:if="{{bleShowConfig}}">
+          <view class="ble-config-item">
+            <text class="ble-config-label">Service UUID</text>
+            <input class="ble-config-input" type="text" value="{{bleServiceUuid}}" data-key="bleServiceUuid" bindinput="onBLEUuidInput" />
+          </view>
+          <view class="ble-config-item">
+            <text class="ble-config-label">TX UUID (notify)</text>
+            <input class="ble-config-input" type="text" value="{{bleTxUuid}}" data-key="bleTxUuid" bindinput="onBLEUuidInput" />
+          </view>
+          <view class="ble-config-item">
+            <text class="ble-config-label">RX UUID (write)</text>
+            <input class="ble-config-input" type="text" value="{{bleRxUuid}}" data-key="bleRxUuid" bindinput="onBLEUuidInput" />
+          </view>
+          <button class="ble-config-confirm" bindtap="onBLEConfirmUuid">确认 UUID</button>
+        </view>
+
+        <!-- 设备扫描与连接 -->
+        <view class="ble-scan-row">
+          <button class="ble-btn scan-btn {{bleScanning ? 'scanning' : ''}}" bindtap="{{bleScanning ? 'onBLEStopScan' : 'onBLEScan'}}">
+            {{bleScanning ? '停止扫描' : '搜索设备'}}
+          </button>
+          <block wx:if="{{bleConnected}}">
+            <view class="ble-status connected">
+              <text class="ble-status-dot"></text>
+              <text>{{bleDeviceName}}</text>
+            </view>
+            <button class="ble-btn disconnect-btn" bindtap="onBLEDisconnect">断开</button>
+          </block>
+          <block wx:else>
+            <view class="ble-status disconnected">
+              <text class="ble-status-dot"></text>
+              <text>未连接</text>
+            </view>
+          </block>
+        </view>
+
+        <!-- 设备列表 -->
+        <view class="ble-device-list" wx:if="{{bleDeviceList.length > 0 && !bleConnected}}">
+          <view class="ble-device-item" wx:for="{{bleDeviceList}}" wx:key="deviceId" bindtap="onBLEConnect" data-deviceid="{{item.deviceId}}" data-name="{{item.name}}">
+            <text class="ble-device-name">{{item.displayName || item.name || '未知设备'}}</text>
+            <text class="ble-device-rssi">RSSI: {{item.RSSI}}</text>
+          </view>
+        </view>
+
+        <!-- ===== 硬件控制按钮 ===== -->
+        <view class="ble-hw-section" wx:if="{{bleConnected}}">
+          <view class="section-label">GPIO 硬件控制</view>
+          <view class="ble-hw-row">
+            <button class="ble-btn hw-on-btn {{hwCommandSending ? 'sending' : ''}} {{(!bleConnected || hwCommandSending) ? 'is-disabled' : ''}}" disabled="{{!bleConnected || hwCommandSending}}" bindtap="onBLEHigh">
+              开启（高电平）
+            </button>
+            <button class="ble-btn hw-off-btn {{hwCommandSending ? 'sending' : ''}} {{(!bleConnected || hwCommandSending) ? 'is-disabled' : ''}}" disabled="{{!bleConnected || hwCommandSending}}" bindtap="onBLELow">
+              关闭（低电平）
+            </button>
+          </view>
+        </view>
+
+        <!-- 发送打印 -->
+        <view class="ble-print-section">
+          <button class="ble-btn print-btn {{bleSending ? 'sending' : ''}} {{(!bleConnected || bleSending) ? 'is-disabled' : ''}}" disabled="{{!bleConnected || bleSending}}" bindtap="onBLESendPrint">
+            {{bleSending ? '发送中...' : '发送到打印机'}}
+          </button>
+          <!-- 脱机调试按钮 -->
+          <button class="ble-btn debug-btn" bindtap="onBLEDebugPrint">
+            脱机调试
+          </button>
+
+          <!-- 进度条 -->
+          <view class="ble-progress-bar" wx:if="{{bleSending || bleProgress > 0}}">
+            <view class="ble-progress-fill" style="width: {{bleProgress}}%"></view>
+          </view>
+          <text class="ble-progress-text" wx:if="{{bleProgressText}}">{{bleProgressText}}</text>
+        </view>
+
+        <!-- 日志输出 -->
+        <view class="ble-log" wx:if="{{bleLog}}">
+          <text class="ble-log-text">{{bleLog}}</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- ===== 社区内容 ===== -->
+    <block wx:if="{{currentTab === 'community'}}">
+      <view class="community-placeholder">
+        <text class="community-placeholder-text">社区内容加载中</text>
+      </view>
+    </block>
+
+  </view>
+
+</scroll-view>
+
+<!-- ===== 图片裁剪弹窗 ===== -->
+<crop-handles 
+  src="{{cropperSrc}}" 
+  show="{{showCropper}}" 
+  bind:cropperconfirm="onCropperConfirm"
+  bind:croppercancel="onCropperCancel" 
+/>

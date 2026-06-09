@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/13514/Downloads/ai-smart-stamp-client-main/ai-smart-stamp-client-main/venv/**)",
+      "Read(//c/Users/13514/Downloads/ai-smart-stamp-client-main/ai-smart-stamp-client-main/venv/pages/index/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\13514\\Downloads\\ai-smart-stamp-client-main\\ai-smart-stamp-client-main\\venv\\components\\image-cropper"
+    ]
+  }
+}
